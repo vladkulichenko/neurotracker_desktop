@@ -18,40 +18,42 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import cv2
 
-
+list_st = []
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1130, 874)
+        MainWindow.resize(1920, 1080)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         pg.setConfigOption('background', 'w')
         self.centralwidget.setObjectName("centralwidget")
         self.graph_cognitive = pg.PlotWidget(self.centralwidget)
-        self.graph_cognitive.setGeometry(QtCore.QRect(10, 230, 411, 191))
+        self.graph_cognitive.setGeometry(QtCore.QRect(10, 30, 500, 250))
         self.graph_cognitive.setObjectName("graph_cognitive")
         self.graph_cognitive.setLimits(yMin=0, yMax=20)
         self.graph_valence = pg.PlotWidget(self.centralwidget)
         self.graph_valence.setLimits(yMin=-1, yMax=1)
-        self.graph_valence.setGeometry(QtCore.QRect(10, 430, 411, 191))
+        self.graph_valence.setGeometry(QtCore.QRect(10, 300, 500, 250))
         self.graph_valence.setObjectName("graph_valence")
         self.graph_interest = pg.PlotWidget(self.centralwidget)
-        self.graph_interest.setGeometry(QtCore.QRect(10, 630, 411, 191))
+        self.graph_interest.setGeometry(QtCore.QRect(10, 560, 500, 250))
         self.graph_interest.setObjectName("graph_interest")
         self.graph_interest.setLimits(yMin=-0.5, yMax=0.5)
         self.graph_concentration = pg.PlotWidget(self.centralwidget)
-        self.graph_concentration.setGeometry(QtCore.QRect(450, 450, 621, 341))
+        self.graph_concentration.setGeometry(QtCore.QRect(550, 650, 600, 350))
         self.graph_concentration.setObjectName("graph_concentration")
         self.graph_concentration.setLimits(yMin=0, yMax=1)
         self.graph_approach = pg.PlotWidget(self.centralwidget)
-        self.graph_approach.setGeometry(QtCore.QRect(10, 30, 411, 191))
+        self.graph_approach.setGeometry(QtCore.QRect(1200, 650, 600, 350))
         self.graph_approach.setObjectName("graph_approach")
         self.graph_approach.setLimits(yMin=-1, yMax=1)
-        self.Screen = QtWidgets.QWidget(self.centralwidget)
-        # self.Screen = QtWidgets.QLabel()
-        self.Screen.setGeometry(QtCore.QRect(430, 30, 671, 381))
-        self.Screen.setStyleSheet("background-color: rgb(222, 222, 222);")
-        self.Screen.setObjectName("Screen")
+        self.Screen = QtWidgets.QHBoxLayout(self.centralwidget)
+        self.Feed = QtWidgets.QLabel(self.centralwidget)
+        self.Screen.addWidget(self.Feed)
+        self.Screen.setContentsMargins(600, 30, 1300, 800)
+        self.Worker1 = Worker1()
+        self.Worker1.start()
+        self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1130, 26))
@@ -109,7 +111,7 @@ class Ui_MainWindow(object):
         self.data_line_valence = self.graph_valence.plot(self.x, self.y_valence, pen=pen)
         self.data_line_cognitive = self.graph_cognitive.plot(self.x, self.y_cognitive, pen=pen)
         self.data_line_concentration = self.graph_concentration.plot(self.x, self.y_concentration, pen=pen)
-        self.data_line_approach = self.graph_approach.plot(self.x, self.y_approach)
+        self.data_line_approach = self.graph_approach.plot(self.x, self.y_approach, pen=pen)
         self.timer = QtCore.QTimer()
         self.timer.setInterval(50)
         self.timer.timeout.connect(self.update_plot_data_interest)
@@ -120,7 +122,6 @@ class Ui_MainWindow(object):
 
         self.timer.start()
         # self.timer1.start()
-
 
     def update_plot_data_interest(self):
         self.x = self.x[1:]  # Remove the first y element.
@@ -190,31 +191,61 @@ class Ui_MainWindow(object):
         self.actionOpen_Project.setText(_translate("MainWindow", "Open Project"))
         self.actionCalibrate_Eye_Traker.setText(_translate("MainWindow", "Calibrate Eye Tracker"))
 
+    def ImageUpdateSlot(self, Image):
+        self.Feed.setPixmap(QPixmap.fromImage(Image))
+
+    def CancelFeed(self):
+        self.Worker1.stop()
+
+
 class Worker1(QThread):
     ImageUpdate = pyqtSignal(QImage)
+    global list_st
     def run(self):
         self.ThreadActive = True
-        # Capture = cv2.VideoCapture(0)
         while self.ThreadActive:
-            # ret, frame = Capture.read()
+            radius = 10
             img = pyautogui.screenshot()
             screen_frame = np.array(img)
-            # screen_frame1 = cv2.cvtColor(screen_frame, cv2.COLOR_BGR2RGB)
-            # if ret:
-            Image = cv2.cvtColor(screen_frame, cv2.COLOR_BGR2RGB)
-            # FlippedImage = cv2.flip(Image, 1)
-            ConvertToQtFormat = QImage(Image.data, Image.shape[1], Image.shape[0], QImage.Format_RGB888)
-            Pic = ConvertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
+            screen_frame1 = cv2.cvtColor(screen_frame, cv2.COLOR_BGR2RGB)
+            list_st.append([random.randint(1, 1920), random.randint(1, 1080)])
+            # print(list_st)
+            if len(list_st) == 2:
+                try:
+                    if list_st[0][0] * 0.01 < list_st[1][0] < list_st[0][0] * 0.01 or \
+                            list_st[0][1] * 0.01 < list_st[1][1] < list_st[0][1] * 0.01:
+                        radius += 5
+                        print(list_st[0])
+                        print(list_st[1])
+
+                except:
+                    # print("huy")
+                    print('________')
+
+
+            circle = cv2.circle(screen_frame1, (list_st[0][0], list_st[0][1]), radius, (255, 255, 0), -2)
+            circle1 = cv2.cvtColor(circle, cv2.COLOR_BGR2RGB)
+            if len(list_st) == 2:
+                list_st.pop()
+                list_st.pop()
+            ConvertToQtFormat = QImage(circle1.data, circle1.shape[1], circle1.shape[0],
+                                       QImage.Format_RGB888)
+            Pic = ConvertToQtFormat.scaled(1400, 600, Qt.KeepAspectRatio)
             self.ImageUpdate.emit(Pic)
+
+
+
     def stop(self):
         self.ThreadActive = False
         self.quit()
 
+
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
-    MainWindow.show()
+    MainWindow.showMaximized()
     sys.exit(app.exec_())
