@@ -9,7 +9,7 @@ import sys, os, json, csv
 import keyboard
 
 
-from psd_indexes import (approach_withdrawal_score,
+from BCI.psd_indexes import (approach_withdrawal_score,
                                         choice_score, cognitive_load_score,
                                         valence_score)
 

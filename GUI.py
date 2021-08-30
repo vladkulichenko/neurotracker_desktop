@@ -18,11 +18,17 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import cv2
 
+from multiprocessing import Process, Queue
+from BCI.eeg_collecting import eeg
+from tracker.collect_eye_biometric_data import collect_eye_biometrics
+
+
 ThreadActive = False
 
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+    def setupUi(self, MainWindow, com_port):
+        self.com_port = com_port
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1920, 1080)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -104,6 +110,15 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def clicked(self):
+        eye_tracker_queue = Queue()
+        eeg_queue = Queue()
+
+        depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue, ))
+        depicting_gazepoint.start()
+
+        depicting_openbci = Process(target=eeg, args=(self.com_port, eeg_queue))
+        depicting_openbci.start()
+
         self.Worker1.start()
         self.x = list(range(100))  # 100 time points
         self.y_interst = [random.uniform(-0.5, 0.5) for _ in range(100)]  # 100 data points
@@ -125,6 +140,8 @@ class Ui_MainWindow(object):
         self.timer.timeout.connect(self.update_plot_data_cognitive)
         self.timer.timeout.connect(self.update_plot_data_approach)
         self.timer.timeout.connect(self.update_plot_data_concentration)
+
+
 
         self.timer.start()
         # self.timer1.start()
