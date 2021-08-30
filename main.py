@@ -4,11 +4,11 @@ import sys
 
 from PyQt5 import QtWidgets
 
-from BCI import eeg
-from tracker import eye_tracker
-from screen_capturing import screen_capturing
+from BCI.eeg_collecting import eeg
+from tracker.collect_eye_biometric_data import collect_eye_biometrics
+from screen_capturing.screen_capturing import screen_capturing
 
-from test_app_2 import Ui_MainWindow
+from gui import Ui_MainWindow
 
 
 
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     com_port = 'COM3'
     monitor_id = 1
 
-    depicting_gazepoint = Process(target=eye_tracker, args=(eye_tracker_queue, ))
+    depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue, ))
     depicting_gazepoint.start()
 
     depicting_openbci = Process(target=eeg, args=(com_port, eeg_queue))
