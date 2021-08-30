@@ -18,7 +18,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import cv2
 
-list_st = []
+ThreadActive = False
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -31,28 +32,32 @@ class Ui_MainWindow(object):
         self.graph_cognitive.setGeometry(QtCore.QRect(10, 30, 500, 250))
         self.graph_cognitive.setObjectName("graph_cognitive")
         self.graph_cognitive.setLimits(yMin=0, yMax=20)
+        self.graph_cognitive.setLabel('top', 'Cognitive')
         self.graph_valence = pg.PlotWidget(self.centralwidget)
         self.graph_valence.setLimits(yMin=-1, yMax=1)
         self.graph_valence.setGeometry(QtCore.QRect(10, 300, 500, 250))
         self.graph_valence.setObjectName("graph_valence")
+        self.graph_valence.setLabel('top', 'Valence')
         self.graph_interest = pg.PlotWidget(self.centralwidget)
         self.graph_interest.setGeometry(QtCore.QRect(10, 560, 500, 250))
         self.graph_interest.setObjectName("graph_interest")
+        self.graph_interest.setLabel('top', 'Interest')
         self.graph_interest.setLimits(yMin=-0.5, yMax=0.5)
         self.graph_concentration = pg.PlotWidget(self.centralwidget)
-        self.graph_concentration.setGeometry(QtCore.QRect(550, 650, 600, 350))
+        self.graph_concentration.setGeometry(QtCore.QRect(550, 620, 600, 350))
         self.graph_concentration.setObjectName("graph_concentration")
+        self.graph_concentration.setLabel('top', 'Concentration')
         self.graph_concentration.setLimits(yMin=0, yMax=1)
         self.graph_approach = pg.PlotWidget(self.centralwidget)
-        self.graph_approach.setGeometry(QtCore.QRect(1200, 650, 600, 350))
+        self.graph_approach.setGeometry(QtCore.QRect(1200, 620, 600, 350))
         self.graph_approach.setObjectName("graph_approach")
         self.graph_approach.setLimits(yMin=-1, yMax=1)
+        self.graph_approach.setLabel('top', 'Approach')
         self.Screen = QtWidgets.QHBoxLayout(self.centralwidget)
         self.Feed = QtWidgets.QLabel(self.centralwidget)
         self.Screen.addWidget(self.Feed)
-        self.Screen.setContentsMargins(600, 30, 1300, 800)
+        self.Screen.setContentsMargins(600, 30, 1600, 800)
         self.Worker1 = Worker1()
-        self.Worker1.start()
         self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -99,6 +104,7 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def clicked(self):
+        self.Worker1.start()
         self.x = list(range(100))  # 100 time points
         self.y_interst = [random.uniform(-0.5, 0.5) for _ in range(100)]  # 100 data points
         self.y_valence = [random.uniform(-1, 1) for _ in range(100)]  # 100 data points
@@ -200,44 +206,28 @@ class Ui_MainWindow(object):
 
 class Worker1(QThread):
     ImageUpdate = pyqtSignal(QImage)
-    global list_st
     def run(self):
-        self.ThreadActive = True
-        while self.ThreadActive:
+        list_st = []
+        ThreadActive = True
+        while ThreadActive:
             radius = 10
             img = pyautogui.screenshot()
             screen_frame = np.array(img)
             screen_frame1 = cv2.cvtColor(screen_frame, cv2.COLOR_BGR2RGB)
             list_st.append([random.randint(1, 1920), random.randint(1, 1080)])
-            # print(list_st)
-            if len(list_st) == 2:
-                try:
-                    if list_st[0][0] * 0.01 < list_st[1][0] < list_st[0][0] * 0.01 or \
-                            list_st[0][1] * 0.01 < list_st[1][1] < list_st[0][1] * 0.01:
-                        radius += 5
-                        print(list_st[0])
-                        print(list_st[1])
+            print(list_st[len(list_st)-2], list_st[len(list_st)-1])
+            if list_st[len(list_st)-1][0] - 5 < list_st[len(list_st) - 1][0] < list_st[len(list_st)-2][0] + 5\
+                    and list_st[len(list_st)-1][1] - 5 < list_st[len(list_st) - 1][1] < list_st[len(list_st)-2][1] + 5:
+                radius += 50
 
-                except:
-                    # print("huy")
-                    print('________')
+            circle = cv2.circle(screen_frame1, (list_st[-1][0], list_st[-1][1]), radius, (255, 255, 0), -2)
+            line = cv2.line(circle, list_st[len(list_st)-2], list_st[len(list_st)-1], (0,0,0))
+            circle1 = cv2.cvtColor(line, cv2.COLOR_BGR2RGB)
 
-
-            circle = cv2.circle(screen_frame1, (list_st[0][0], list_st[0][1]), radius, (255, 255, 0), -2)
-            circle1 = cv2.cvtColor(circle, cv2.COLOR_BGR2RGB)
-            if len(list_st) == 2:
-                list_st.pop()
-                list_st.pop()
             ConvertToQtFormat = QImage(circle1.data, circle1.shape[1], circle1.shape[0],
                                        QImage.Format_RGB888)
-            Pic = ConvertToQtFormat.scaled(1400, 600, Qt.KeepAspectRatio)
+            Pic = ConvertToQtFormat.scaled(1600, 550, Qt.KeepAspectRatio)
             self.ImageUpdate.emit(Pic)
-
-
-
-    def stop(self):
-        self.ThreadActive = False
-        self.quit()
 
 
 if __name__ == "__main__":
