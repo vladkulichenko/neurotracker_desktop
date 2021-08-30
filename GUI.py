@@ -119,16 +119,25 @@ class Ui_MainWindow(object):
 
         depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue,))
         depicting_gazepoint.start()
-        # depicting_openbci = Process(target=eeg, args=(self.com_port, eeg_queue))
-        # depicting_openbci.start()
+
+        depicting_openbci = Process(target=eeg, args=(self.com_port, eeg_queue))
+        depicting_openbci.start()
 
         self.Worker1.start()
         self.x = list(range(100))  # 100 time points
-        self.y_interst = [random.uniform(-0.5, 0.5) for _ in range(100)]  # 100 data points
-        self.y_valence = [random.uniform(-1, 1) for _ in range(100)]  # 100 data points
-        self.y_concentration = [random.uniform(0, 1) for _ in range(100)]  # 100 data points
-        self.y_cognitive = [random.uniform(0, 20) for _ in range(100)]  # 100 data points
-        self.y_approach = [random.uniform(-1, 1) for _ in range(100)]  # 100 data points
+        # temp_eeg = eeg_queue.get()
+        # if len(temp_eeg) > 1:
+        #     self.y_interst = temp_eeg.get('Interest'[0])
+        #     self.y_valence = temp_eeg.get('Valence'[0])
+        #     self.y_interst = temp_eeg.get('Concentration'[0])
+        #     self.y_interst = temp_eeg.get('Cognitive_Load'[0])
+        #     self.y_interst = temp_eeg.get('Approach_Withdrawal'[0])
+        # else:
+        self.y_interst = [0] * 100  # 100 data points
+        self.y_valence = [0] * 100  # 100 data points
+        self.y_concentration = [0] * 100  # 100 data points
+        self.y_cognitive = [0] * 100  # 100 data points
+        self.y_approach = [0] * 100  # 100 data points
 
         pen = pg.mkPen(color=(255, 0, 0))
         self.data_line_interest = self.graph_interest.plot(self.x, self.y_interst, pen=pen)
@@ -148,13 +157,23 @@ class Ui_MainWindow(object):
         # self.timer1.start()
 
     def update_plot_data_interest(self):
-        self.x = self.x[1:]  # Remove the first y element.
-        self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
+        temp_eeg = []
+        if len(temp_eeg) != 0:
+            self.x = self.x[1:]  # Remove the first y element.
+            self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
 
-        self.y_interst = self.y_interst[1:]  # Remove the first
-        self.y_interst.append(random.uniform(-0.5, 0.5))  # Add a new random value.
+            self.y_interst = self.y_interst[1:]  # Remove the first
+            self.y_interst.append(temp_eeg.get('Interest'[0]))  # Add a new random value.
 
-        self.data_line_interest.setData(self.x, self.y_interst)  # Update the data
+            self.data_line_interest.setData(self.x, self.y_interst)  # Update the data
+        else:
+            self.x = self.x[1:]  # Remove the first y element.
+            self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
+
+            self.y_interst = self.y_interst[1:]  # Remove the first
+            self.y_interst.append(random.uniform(-0.5, 0.5))  # Add a new random value.
+
+            self.data_line_interest.setData(self.x, self.y_interst)  # Update the data
 
     def update_plot_data_valence(self):
         self.x = self.x[1:]  # Remove the first y element.
@@ -234,7 +253,7 @@ class Worker1(QThread):
             radius = 10
             temp_x = temp.get('eye_gaze_screen_fraction_x')
             temp_y = temp.get('eye_gaze_screen_fraction_y')
-            with mss.mss() as mss_instance: 
+            with mss.mss() as mss_instance:
                 monitor_1 = mss_instance.monitors[1]
                 img = mss_instance.grab(monitor_1)
                 screen_frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
