@@ -18,17 +18,11 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import cv2
 
-from multiprocessing import Process, Queue
-from BCI.eeg_collecting import eeg
-from tracker.collect_eye_biometric_data import collect_eye_biometrics
-
-
 ThreadActive = False
 
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow, com_port):
-        self.com_port = com_port
+    def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1920, 1080)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -110,15 +104,6 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def clicked(self):
-        eye_tracker_queue = Queue()
-        eeg_queue = Queue()
-
-        depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue, ))
-        depicting_gazepoint.start()
-
-        depicting_openbci = Process(target=eeg, args=(self.com_port, eeg_queue))
-        depicting_openbci.start()
-
         self.Worker1.start()
         self.x = list(range(100))  # 100 time points
         self.y_interst = [random.uniform(-0.5, 0.5) for _ in range(100)]  # 100 data points
@@ -133,6 +118,11 @@ class Ui_MainWindow(object):
         self.data_line_cognitive = self.graph_cognitive.plot(self.x, self.y_cognitive, pen=pen)
         self.data_line_concentration = self.graph_concentration.plot(self.x, self.y_concentration, pen=pen)
         self.data_line_approach = self.graph_approach.plot(self.x, self.y_approach, pen=pen)
+        # while True:
+        #     if self.y_cognitive > 5:
+        #         self.graph_cognitive.setLabel('top', 'High conccentration')
+        #     else:
+        #         self.graph_concentration.setLabel('top', 'Concentration')
         self.timer = QtCore.QTimer()
         self.timer.setInterval(50)
         self.timer.timeout.connect(self.update_plot_data_interest)
@@ -140,8 +130,6 @@ class Ui_MainWindow(object):
         self.timer.timeout.connect(self.update_plot_data_cognitive)
         self.timer.timeout.connect(self.update_plot_data_approach)
         self.timer.timeout.connect(self.update_plot_data_concentration)
-
-
 
         self.timer.start()
         # self.timer1.start()
@@ -230,18 +218,19 @@ class Worker1(QThread):
             radius = 10
             img = pyautogui.screenshot()
             screen_frame = np.array(img)
-            screen_frame1 = cv2.cvtColor(screen_frame, cv2.COLOR_BGR2RGB)
             list_st.append([random.randint(1, 1920), random.randint(1, 1080)])
             print(list_st[len(list_st)-2], list_st[len(list_st)-1])
             if list_st[len(list_st)-1][0] - 5 < list_st[len(list_st) - 1][0] < list_st[len(list_st)-2][0] + 5\
                     and list_st[len(list_st)-1][1] - 5 < list_st[len(list_st) - 1][1] < list_st[len(list_st)-2][1] + 5:
                 radius += 50
 
-            circle = cv2.circle(screen_frame1, (list_st[-1][0], list_st[-1][1]), radius, (255, 255, 0), -2)
-            line = cv2.line(circle, list_st[len(list_st)-2], list_st[len(list_st)-1], (0,0,0))
-            circle1 = cv2.cvtColor(line, cv2.COLOR_BGR2RGB)
+            circle = cv2.circle(screen_frame, (list_st[-1][0], list_st[-1][1]), radius, (255, 255, 0), -2)
+            cv2.line(circle, list_st[len(list_st)-2], list_st[len(list_st)-1], (0, 0, 0))
 
-            ConvertToQtFormat = QImage(circle1.data, circle1.shape[1], circle1.shape[0],
+            circle1 = cv2.cvtColor(circle, cv2.COLOR_BGR2RGB)
+            circle2 = cv2.cvtColor(circle1, cv2.COLOR_BGR2RGB)
+
+            ConvertToQtFormat = QImage(circle2.data, circle2.shape[1], circle2.shape[0],
                                        QImage.Format_RGB888)
             Pic = ConvertToQtFormat.scaled(1600, 550, Qt.KeepAspectRatio)
             self.ImageUpdate.emit(Pic)
