@@ -32,7 +32,21 @@ eeg_queue = Queue()
 
 
 class Ui_MainWindow(object):
+    '''
+    Interface of the application.
+    '''
     def setupUi(self, MainWindow, com_port):
+        '''
+        Setting parameters for the interface and creating window.
+
+        Args:
+            MainWindow(MainWindow object): object of the MainWindow class.
+            com_port(str): name of the COM_port the board is connected to.
+
+        Returns:
+            Nothing.
+    
+        '''
         self.com_port = com_port
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1920, 1080)
@@ -115,6 +129,13 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def clicked(self):
+        '''
+            Call functions in case the button "Run" was clicked.
+
+            Returns:
+                Nothing.
+    
+        '''
         global eye_tracker_queue, eeg_queue
 
         depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue,))
