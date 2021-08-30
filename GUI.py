@@ -157,7 +157,7 @@ class Ui_MainWindow(object):
         # self.timer1.start()
 
     def update_plot_data_interest(self):
-        temp_eeg = []
+        temp_eeg = eeg_queue.get()
         if len(temp_eeg) != 0:
             self.x = self.x[1:]  # Remove the first y element.
             self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
