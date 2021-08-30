@@ -157,7 +157,7 @@ class Ui_MainWindow(object):
         # self.timer1.start()
 
     def update_plot_data_interest(self):
-        temp_eeg = eeg_queue.get()
+        temp_eeg = []
         if len(temp_eeg) != 0:
             self.x = self.x[1:]  # Remove the first y element.
             self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
@@ -254,7 +254,7 @@ class Worker1(QThread):
             temp_x = temp.get('eye_gaze_screen_fraction_x')
             temp_y = temp.get('eye_gaze_screen_fraction_y')
             with mss.mss() as mss_instance:
-                monitor_1 = mss_instance.monitors[1]
+                monitor_1 = mss_instance.monitors[2]
                 img = mss_instance.grab(monitor_1)
                 screen_frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
                 if len(temp) > 1:
