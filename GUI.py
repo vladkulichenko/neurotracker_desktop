@@ -108,6 +108,8 @@ class Ui_MainWindow(object):
         self.actionCreate_Project.setObjectName("actionCreate_Project")
         self.actionOpen_Project = QtWidgets.QAction(MainWindow)
         self.actionOpen_Project.setObjectName("actionOpen_Project")
+        self.actionSave_Project = QtWidgets.QAction(MainWindow)
+        self.actionSave_Project.setObjectName("actionSave_Project")
         self.actionCalibrate_Eye_Traker = QtWidgets.QAction(MainWindow)
         self.actionCalibrate_Eye_Traker.setObjectName("actionCalibrate_Eye_Traker")
         self.actionRun = QtWidgets.QAction(MainWindow)
@@ -115,7 +117,14 @@ class Ui_MainWindow(object):
         self.menuStart.addAction(self.actionStart_services)
         self.menuStart.addAction(self.actionCalibrate_Eye_Traker)
         self.menuFile.addAction(self.actionCreate_Project)
+        self.actionCreate_Project.setShortcut('Ctrl+N')
+        self.actionCreate_Project.setStatusTip('New project')
         self.menuFile.addAction(self.actionOpen_Project)
+        self.actionOpen_Project.setShortcut('Ctrl+O')
+        self.actionOpen_Project.setStatusTip('Open project')
+        self.menuFile.addAction(self.actionSave_Project)
+        self.actionSave_Project.setShortcut('Ctrl+S')
+        self.actionSave_Project.setStatusTip('Save project')
         self.menuRun.addAction(self.actionRun)
         self.actionRun.setObjectName("Run")
         self.menubar.addAction(self.menuFile.menuAction())
@@ -124,9 +133,28 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuRun.menuAction())
 
         self.menuRun.triggered.connect(self.clicked)
+        self.actionCreate_Project.triggered.connect(self.create_project)
+        self.actionOpen_Project.triggered.connect(self.open_project)
+        self.actionSave_Project.triggered.connect(self.save_project)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def create_project(self):
+        #dir_ = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select project folder:', 'C:\\', QtWidgets.QFileDialog.ShowDirsOnly)
+        self.created_file_name = QFileDialog.getSaveFileName(None, "Open file", "", ".prj")
+        print(self.created_file_name)
+        self.current_file = open(self.created_file_name[0] + self.created_file_name[1], 'a', newline="")
+
+    def open_project(self):
+        self.opened_file_name = QFileDialog.getOpenFileName(None, "Open file")
+        print(self.opened_file_name)
+        self.current_file = open(self.opened_file_name[0], 'a', newline="")
+        
+    def save_project(self):
+        self.current_file.close()
+        
+
 
     def clicked(self):
         '''
@@ -253,6 +281,7 @@ class Ui_MainWindow(object):
         self.actionStart_services.setText(_translate("MainWindow", "Calibrate BCI"))
         self.actionCreate_Project.setText(_translate("MainWindow", "Create Project"))
         self.actionOpen_Project.setText(_translate("MainWindow", "Open Project"))
+        self.actionSave_Project.setText(_translate("MainWindow", "Save Project"))
         self.actionCalibrate_Eye_Traker.setText(_translate("MainWindow", "Calibrate Eye Tracker"))
 
     def ImageUpdateSlot(self, Image):

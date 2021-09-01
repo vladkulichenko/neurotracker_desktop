@@ -42,6 +42,12 @@ def process_biometrics(data):
 
 def collect_eye_biometrics(biometrics_queue):
     """Reads gazepoint's data and sends it through the given queue
+
+    Args:
+        biometrics_queue (Queue): Queue where we put gazepoint data.
+
+    Returns:
+        Nothing: Endles cycle which puts gazepoint data into the queue.
     """
 
     # connecting to the TCP/IP local socket
