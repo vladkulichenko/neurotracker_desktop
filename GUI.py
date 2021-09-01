@@ -142,7 +142,7 @@ class Ui_MainWindow(object):
 
     def create_project(self):
         #dir_ = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select project folder:', 'C:\\', QtWidgets.QFileDialog.ShowDirsOnly)
-        self.created_file_name = QFileDialog.getSaveFileName(None, "Open file", "", ".prj")
+        self.created_file_name = QFileDialog.getSaveFileName(None, "Create file", "", ".prj")
         print(self.created_file_name)
         self.current_file = open(self.created_file_name[0] + self.created_file_name[1], 'a', newline="")
 
