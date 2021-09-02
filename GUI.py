@@ -117,8 +117,8 @@ class Ui_MainWindow(object):
         self.actionSettings.setObjectName("Settings")
         self.menuSettings.addAction(self.actionSettings)
         self.menuStart.addAction(self.actionConnect_devices)
-        self.menuStart.addAction(self.actionStart_services)
-        self.menuStart.addAction(self.actionCalibrate_Eye_Traker)
+        self.menuSettings.addAction(self.actionStart_services)
+        self.menuSettings.addAction(self.actionCalibrate_Eye_Traker)
         self.menuFile.addAction(self.actionCreate_Project)
         self.menuFile.addAction(self.actionOpen_Project)
         self.menuRun.addAction(self.actionRun)
@@ -128,15 +128,40 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuRun.menuAction())
 
         self.menuRun.triggered.connect(self.start_analysis)
-        self.menuSettings.triggered.connect(self.popup_settings)
+        self.menuSettings.triggered.connect(self.popup_bsi)
+        self.menuSettings.triggered.connect(self.popup_gaze)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-    def popup_settings(self):
-        window = QWindow()
-        window.show()
-        # pop.show()
+    # def popup_settings(self):
+    #     window = QWindow()
+    #     window.show()
+    #     # pop.show()
+
+    def popup_bsi(self):
+        print("Opening a new popup window...")
+        self.settings_w = MyPopup('Open BCI')
+        self.button = QPushButton(self.settings_w)
+        self.button.setText('Calibration')
+        self.drop_down_ports = QComboBox(self.settings_w)
+        self.drop_down_ports.addItem('COM2')
+        self.drop_down_ports.addItem('COM3')
+        self.drop_down_ports.move(100, 20)
+        self.settings_w.setGeometry(QRect(100, 100, 400, 200))
+        self.settings_w.show()
+
+    def popup_gaze(self):
+        print("Opening a new popup window...")
+        self.settings_w = MyPopup()
+        self.button = QPushButton(self.settings_w)
+        self.button.setText('Calibration')
+        self.drop_down_ports = QComboBox(self.settings_w)
+        self.drop_down_ports.addItem('COM2')
+        self.drop_down_ports.addItem('COM3')
+        self.drop_down_ports.move(100, 20)
+        self.settings_w.setGeometry(QRect(100, 100, 400, 200))
+        self.settings_w.show()
 
     def start_analysis(self):
         '''
@@ -270,10 +295,12 @@ class Ui_MainWindow(object):
         self.Worker1.stop()
 
 
-class Popup(QDialog):
-    def __init__(self):
-        self.resize(500, 500)
-        # self.label = QLabel(name, self)
+class MyPopup(QWidget):
+    def __init__(self, name):
+        QWidget.__init__(self)
+        self.name = name
+        self.setWindowTitle(self.name)
+
 
 
 class ScreenRecorder(QThread):
