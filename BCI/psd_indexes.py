@@ -46,6 +46,15 @@ def compute_signal_band_power(signal, f_low, f_high, sfreq=125):
 
 
 def approach_withdrawal_score(f3_channel, f4_channel):
+    """Computes approach_withdrawal score.
+
+    Args:
+        f3_channel (array): One dimensional array of F3 signal recording.
+        f4_channel (array): One dimensional array of F4 signal recording.
+
+    Returns:
+        float: Returns approach_withdrawal score.
+    """
 
     f3_score = compute_signal_band_power(
         f3_channel, sfreq=125, f_low=8, f_high=13)
@@ -63,6 +72,15 @@ def approach_withdrawal_score(f3_channel, f4_channel):
 
 
 def valence_score(f3_channel, f4_channel):
+    """Computes valence score.
+
+    Args:
+        f3_channel (array): One dimensional array of F3 signal recording.
+        f4_channel (array): One dimensional array of F4 signal recording.
+
+    Returns:
+        float: Returns valence score.
+    """
 
     f3_alpha_score = compute_signal_band_power(f3_channel, f_low=8, f_high=13)
     f3_beta_score = compute_signal_band_power(
@@ -83,6 +101,17 @@ def valence_score(f3_channel, f4_channel):
 
 
 def cognitive_load_score(f3_channel, f4_channel, p7_channel, p8_channel):
+    """Computes cognitive_load score.
+
+    Args:
+        f3_channel (array): One dimensional array of F3 signal recording.
+        f4_channel (array): One dimensional array of F4 signal recording.
+        p7_channel (array): One dimensional array of P7 signal recording.
+        p8_channel (array): One dimensional array of P8 signal recording.
+
+    Returns:
+        float: Returns cognitive score.
+    """
 
     p7_alpha_score = compute_signal_band_power(p7_channel, f_low=8, f_high=12)
     p8_alpha_score = compute_signal_band_power(
@@ -104,6 +133,15 @@ def cognitive_load_score(f3_channel, f4_channel, p7_channel, p8_channel):
 
 
 def choice_score(af3_channel, af4_channel):
+    """Computes choice score.
+
+    Args:
+        af3_channel (array): One dimensional array of AF3 signal recording.
+        af4_channel (array): One dimensional array of AF4 signal recording.
+
+    Returns:
+        float: Returns choice score.
+    """
 
     # af3_gamma_score = compute_signal_band_power(
     #     af3_channel, f_low=25, f_high=40)

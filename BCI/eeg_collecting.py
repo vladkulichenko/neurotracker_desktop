@@ -15,6 +15,17 @@ from BCI.psd_indexes import (approach_withdrawal_score,
 
 
 def eeg(com_port, eeg_queue):
+    '''
+    Setting parameters for board connection. Connect to board. Receiving data from board and put it into the queue.
+
+    Args:
+        com_port(str): name of the COM_port the board is connected to.
+        eeg_queue (Queue): Queue where we put board data.
+
+    Returns:
+        Nothing. Function is in cycle.
+    
+    '''
     BoardShim.enable_dev_board_logger()
 
     params = BrainFlowInputParams()
@@ -33,6 +44,15 @@ def eeg(com_port, eeg_queue):
 
 
 def connect_to_cyton(board):
+    '''
+    Connects to board and preparing session.
+
+    Args:
+        board(BoardShim): board object.
+
+    Returns:
+        Bool: True in case connection is successfull. Otherwise you will see endless error with connection in the terminal.
+    '''
     while True:
         try:
             board.prepare_session()
@@ -54,6 +74,19 @@ def connect_to_cyton(board):
 
 
 def collecting_data(board, board_id, sampling_rate, eeg_channels):
+    '''
+    Collects data from the board.
+
+    Args:
+        board(BoardShim): board object.
+        board_id(int): an id of the board which app connects to.
+        sampling_rate(int): sampling rate of the board.
+        eeg_channels(list): list of channels indexes 1-16 channels.
+
+    Returns:
+        Dict: Dictionary with all collected and processed data from board.
+
+    '''
     try:
         not_connected_channel = 0
         is_empty = False
