@@ -27,16 +27,20 @@ def process_biometrics(data):
         dict: gazepoint data in a formatted dict
     """
     result = {}
-    if 'REC' in data:
-        data_dict = {item.split('=')[0]: item.split(
-            '=')[1] for item in data.split(' ') if '=' in item}
-        for abbr, name in data_fields_mapping.items():
-            # print(data_dict[abbr].strip('\'"'))
-            
-            if data_dict[abbr].strip('\'"') in ("", " "):
-                result[name] = None
-            else:
-                result[name] = float(data_dict[abbr].strip('\'"'))
+    try:
+        if 'REC' in data:
+            data_dict = {item.split('=')[0]: item.split(
+                '=')[1] for item in data.split(' ') if '=' in item}
+            for abbr, name in data_fields_mapping.items():
+                # print(data_dict[abbr].strip('\'"'))
+
+                if data_dict[abbr].strip('\'"') in ("", " "):
+                    result[name] = None
+                else:
+                    result[name] = float(data_dict[abbr].strip('\'"'))
+    except ValueError:
+        print('ValueError')
+
     return result
 
 
@@ -68,5 +72,5 @@ def collect_eye_biometrics(biometrics_queue):
     while True:
         rxdat = s.recv(1024)
         biometrics_queue.put(process_biometrics(bytes.decode(rxdat)))
-        # just to slow-down  sampling rate for nice vizualization
+        # just to slow-down  sampling rate for nice visualization
         time.sleep(0.075)
