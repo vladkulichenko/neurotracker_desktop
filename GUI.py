@@ -11,7 +11,7 @@ import random
 import mss as mss
 import numpy
 from PIL import Image
-import sys
+import sys, os, json, csv, time
 
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -30,7 +30,8 @@ from tracker.collect_eye_biometric_data import collect_eye_biometrics
 eye_tracker_queue = Queue()
 eeg_queue = Queue()
 
-
+global beggin_time
+beggin_time = time.time()
 class Ui_MainWindow(object):
     '''
     Interface of the application.
@@ -47,6 +48,7 @@ class Ui_MainWindow(object):
             Nothing.
     
         '''
+    
         self.com_port = com_port
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1920, 1080)
@@ -142,14 +144,15 @@ class Ui_MainWindow(object):
 
     def create_project(self):
         #dir_ = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select project folder:', 'C:\\', QtWidgets.QFileDialog.ShowDirsOnly)
-        self.created_file_name = QFileDialog.getSaveFileName(None, "Create file", "", ".prj")
-        print(self.created_file_name)
-        self.current_file = open(self.created_file_name[0] + self.created_file_name[1], 'a', newline="")
+        global created_file
+        created_file = QFileDialog.getSaveFileName(None, "Create file", "", ".prj")
+        print(created_file)
+        self.current_file = open(created_file[0] + created_file[1], 'a', newline="")
 
     def open_project(self):
-        self.opened_file_name = QFileDialog.getOpenFileName(None, "Open file")
-        print(self.opened_file_name)
-        self.current_file = open(self.opened_file_name[0], 'a', newline="")
+        self.opened_file = QFileDialog.getOpenFileName(None, "Open file")
+        print(self.opened_file)
+        self.current_file = open(self.opened_file[0], 'a', newline="")
         
     def save_project(self):
         self.current_file.close()
@@ -166,7 +169,7 @@ class Ui_MainWindow(object):
         '''
         global eye_tracker_queue, eeg_queue
 
-        depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue,))
+        depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue, ))
         depicting_gazepoint.start()
 
         depicting_openbci = Process(target=eeg, args=(self.com_port, eeg_queue))
@@ -174,7 +177,20 @@ class Ui_MainWindow(object):
 
         self.Worker1.start()
         self.x = list(range(100))  # 100 time points
-        # temp_eeg = eeg_queue.get()
+        temp_eeg = eeg_queue.get()
+
+        global created_file
+        global beggin_time
+        with open(created_file[0] + "_eeg_data.csv", 'a', newline="") as file:
+            writer = csv.writer(file)
+            if os.stat(created_file[0] + "_eeg_data.csv").st_size == 0:
+                writer.writerow(["time", "Approach_Withdrawal", "Interest", "Cognitive_Load", "Valence", "Concentration"])
+            try:
+                current_time_eeg = time.time() - beggin_time
+                writer.writerow([current_time_eeg, temp_eeg["Approach_Withdrawal"][0], temp_eeg["Interest"][0], temp_eeg["Cognitive_Load"][0], temp_eeg["Valence"][0], temp_eeg["Concentration"][0]])
+            except KeyError:
+                print("something wrong with writing openbci")
+            file.close()
         # if len(temp_eeg) > 1:
         #     self.y_interst = temp_eeg.get('Interest'[0])
         #     self.y_valence = temp_eeg.get('Valence'[0])
@@ -293,18 +309,32 @@ class Ui_MainWindow(object):
 
 class Worker1(QThread):
     global eye_tracker_queue
+    
     ImageUpdate = pyqtSignal(QImage)
 
     def run(self):
+        global created_file
+        global beggin_time
         list_st = []
         ThreadActive = True
         while ThreadActive:
             temp = eye_tracker_queue.get()
+            
+            with open(created_file[0] + "_tracker_data.csv", 'a', newline="") as file:
+                writer = csv.writer(file)
+                if os.stat(created_file[0] + "_tracker_data.csv").st_size == 0:
+                    writer.writerow(["time", "X", "y"])
+                try:
+                    current_time_tracker = time.time() - beggin_time
+                    writer.writerow([current_time_tracker, temp.get('eye_gaze_screen_fraction_x'), temp.get('eye_gaze_screen_fraction_y')])
+                except KeyError:
+                    print("something wrong with writing eye_tracker")
+                file.close()
             radius = 10
             temp_x = temp.get('eye_gaze_screen_fraction_x')
             temp_y = temp.get('eye_gaze_screen_fraction_y')
             with mss.mss() as mss_instance:
-                monitor_1 = mss_instance.monitors[2]
+                monitor_1 = mss_instance.monitors[1]
                 img = mss_instance.grab(monitor_1)
                 screen_frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
                 if len(temp) > 1:

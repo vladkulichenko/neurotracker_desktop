@@ -1,5 +1,6 @@
 import socket
 import time
+import sys, os, json, csv
 
 # Host machine IP
 HOST = '127.0.0.1'
@@ -67,6 +68,7 @@ def collect_eye_biometrics(biometrics_queue):
 
     while True:
         rxdat = s.recv(1024)
-        biometrics_queue.put(process_biometrics(bytes.decode(rxdat)))
+        data = process_biometrics(bytes.decode(rxdat))
+        biometrics_queue.put(data)
         # just to slow-down  sampling rate for nice vizualization
-        time.sleep(0.1)
+        time.sleep(0.075)
