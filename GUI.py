@@ -30,6 +30,15 @@ from tracker.collect_eye_biometric_data import collect_eye_biometrics
 eye_tracker_queue = Queue()
 eeg_queue = Queue()
 
+resolution = (1920, 1080)
+
+codec = cv2.VideoWriter_fourcc(*"XVID")
+
+filename = "Recording2.avi"
+
+fps = 24
+out = cv2.VideoWriter(filename, codec, fps, resolution)
+
 
 class Ui_MainWindow(object):
     '''
@@ -55,7 +64,7 @@ class Ui_MainWindow(object):
         pg.setConfigOption('background', 'w')
         self.centralwidget.setObjectName("centralwidget")
         self.graph_cognitive = pg.PlotWidget(self.centralwidget)
-        self.graph_cognitive.setGeometry(QtCore.QRect(10, 720, 600, 220))
+        self.graph_cognitive.setGeometry(QtCore.QRect(10, 720, 920, 220))
         self.graph_cognitive.setObjectName("graph_cognitive")
         self.graph_cognitive.setLimits(yMin=0, yMax=1)
         # self.graph_valence = pg.PlotWidget(self.centralwidget)
@@ -69,7 +78,7 @@ class Ui_MainWindow(object):
         # self.graph_interest.setLabel('top', 'Interest')
         # self.graph_interest.setLimits(yMin=-0.5, yMax=0.5)
         self.graph_approach = pg.PlotWidget(self.centralwidget)
-        self.graph_approach.setGeometry(QtCore.QRect(630, 720, 600, 220))
+        self.graph_approach.setGeometry(QtCore.QRect(950, 720, 960, 220))
         self.graph_approach.setObjectName("graph_approach")
         self.graph_approach.setLimits(yMin=-1, yMax=1)
         self.graph_approach.addLegend()
@@ -126,10 +135,15 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuStart.menuAction())
         self.menubar.addAction(self.menuSettings.menuAction())
         self.menubar.addAction(self.menuRun.menuAction())
+        self.startbutton = QtWidgets.QPushButton(self.centralwidget)
+        self.startbutton.setMinimumSize(QtCore.QSize(0, 23))
+        self.startbutton.setIconSize(QtCore.QSize(16, 25))
+        self.startbutton.setObjectName("startbutton")
 
         self.menuRun.triggered.connect(self.start_analysis)
         self.actionStart_OpenBCI.triggered.connect(self.popup_bsi)
         self.actionCalibrate_Eye_Traker.triggered.connect(self.popup_gaze)
+        self.startbutton.clicked.connect(self.CancelFeed)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -142,14 +156,35 @@ class Ui_MainWindow(object):
     def popup_bsi(self):
         print("Opening a new popup window...")
         self.settings_w = MyPopup('OpenBCI')
-        self.button = QPushButton(self.settings_w)
-        self.button.setText('Calibration')
+        self.button_calibration = QPushButton(self.settings_w)
+        self.button_calibration.setText('Calibration')
         self.drop_down_ports = QComboBox(self.settings_w)
+        self.label = QtWidgets.QLabel(self.settings_w)
+        self.label.setGeometry(QtCore.QRect(10, 106, 60, 25))
+        self.label.setText('COM ports')
+        self.label1 = QtWidgets.QLabel(self.settings_w)
+        self.label1.setGeometry(QtCore.QRect(10, 80, 100, 25))
+        self.label1.setText('Type of connection')
         self.drop_down_ports.addItem('COM2')
         self.drop_down_ports.addItem('COM3')
-        self.drop_down_ports.move(100, 20)
+        self.drop_down_conn = QComboBox(self.settings_w)
+        self.drop_down_conn.addItem('Type_of_connection')
+        self.drop_down_conn.addItem('WiFi')
+        self.drop_down_conn.addItem('Dongle')
+        self.button_channels1 = QPushButton(self.settings_w)
+        self.button_channels2 = QPushButton(self.settings_w)
+        self.button_channels1.setText('16 Channels')
+        self.button_channels2.setText('8 Channels')
+        self.button_calibration.setGeometry(QRect(10, 20, 60, 60))
+        self.button_channels1.setGeometry(QRect(70, 20, 70, 60))
+        self.button_channels2.setGeometry(QRect(140, 20, 70, 60))
+        self.drop_down_conn.setGeometry(QRect(110, 80, 150, 25))
+        self.drop_down_ports.setGeometry(QRect(80, 106, 150, 25))
         self.settings_w.setGeometry(QRect(100, 100, 400, 200))
         self.settings_w.show()
+
+    def CancelFeed(self):
+        self.Worker1.stop()
 
     def popup_gaze(self):
         self.settings_w = MyPopup('GazePoint')
@@ -161,23 +196,23 @@ class Ui_MainWindow(object):
         self.button_vizualization.setText('Select visualization')
         self.button_screenselection.setText('Select screen')
         self.button_audio.setText('Audio')
-        self.button_audio.move(0, 20)
-        self.button_calibration.move(80, 20)
-        self.button_vizualization.move(160, 20)
-        self.button_screenselection.move(220, 20)
+        self.button_audio.setGeometry(QRect(10, 20, 60, 60))
+        self.button_calibration.setGeometry(QRect(70, 20, 70, 60))
+        self.button_screenselection.setGeometry(QRect(140, 20, 120, 60))
+        self.button_vizualization.setGeometry(QRect(140, 80, 120, 60))
         self.settings_w.setGeometry(QRect(100, 100, 400, 200))
         self.settings_w.show()
 
     def start_analysis(self):
-        '''
+        """
             Call functions in case the button "Run" was clicked.
 
             Returns:
                 Nothing.
 
-        '''
+        """
         global eye_tracker_queue, eeg_queue
-
+        self.startbutton.setText("Stop Recording")
         depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue,))
         depicting_gazepoint.start()
 
@@ -200,21 +235,23 @@ class Ui_MainWindow(object):
         self.y_cognitive = [0] * 60  # 100 data points
         self.y_approach = [0] * 60  # 100 data points
 
-        pen_approach = pg.mkPen(cosmetic=True, width=2.5, color=(0, 255, 0))
-        pen_valence = pg.mkPen(cosmetic=True, width=2.5, color=(255, 0, 255))
-        pen_cognitive = pg.mkPen(cosmetic=True, width=2.5, color=(0, 0, 255))
+        pen_approach = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(0, 255, 0))
+        pen_valence = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(255, 0, 255))
+        pen_cognitive = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(0, 0, 255))
         pen_concentration = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(255, 0, 0))
         # self.graph_interest.addLegend()
         # self.data_line_interest = self.graph_interest.plot(self.x, self.y_interst, pen=pen)
-        self.data_line_valence = self.graph_approach.plot(self.x, self.y_valence, antialias=True, pen=pen_valence, name="Valence")
+        self.data_line_valence = self.graph_approach.plot(self.x, self.y_valence, antialias=True, pen=pen_valence,
+                                                          name="Valence")
         self.data_line_cognitive = self.graph_cognitive.plot(self.x, self.y_cognitive, pen=pen_cognitive,
                                                              name="Cognitive", antialias=True)
         self.data_line_concentration = self.graph_cognitive.plot(self.x, self.y_concentration, pen=pen_concentration,
                                                                  name="Concentration", antialias=True)
-        self.data_line_approach = self.graph_approach.plot(self.x, self.y_approach, antialias=True, pen=pen_approach, name="Approach")
+        self.data_line_approach = self.graph_approach.plot(self.x, self.y_approach, antialias=True, pen=pen_approach,
+                                                           name="Approach")
         self.timer = QtCore.QTimer()
         self.timer.setInterval(1000)
-        # self.timer.timeout.connect(self.update_plot_data_interest)
+
         self.timer.timeout.connect(self.update_plot_data_valence)
         self.timer.timeout.connect(self.update_plot_data_cognitive)
         self.timer.timeout.connect(self.update_plot_data_approach)
@@ -286,6 +323,7 @@ class Ui_MainWindow(object):
         self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
         self.menuRun.setTitle(_translate("MainWindow", "Run"))
         self.actionRun.setText(_translate("MainWindow", "Run"))
+        self.startbutton.setText(_translate("MainWindow", "Start Recording"))
         self.actionSettings.setText(_translate("MainWindow", "Settings"))
         self.actionConnect_devices.setText(_translate("MainWindow", "Connect devices"))
         self.actionStart_OpenBCI.setText(_translate("MainWindow", "Calibrate BCI"))
@@ -297,7 +335,7 @@ class Ui_MainWindow(object):
         self.Feed.setPixmap(QPixmap.fromImage(Image))
 
     def CancelFeed(self):
-        self.Worker1.stop()
+        self.Worker1.quit()
 
 
 class MyPopup(QWidget):
@@ -315,13 +353,14 @@ class ScreenRecorder(QThread):
     def run(self):
         list_st = []
         ThreadActive = True
+        radius = 10
         while ThreadActive:
             temp = eye_tracker_queue.get()
-            radius = 10
+            print(eye_tracker_queue.qsize())
             temp_x = temp.get('eye_gaze_screen_fraction_x')
             temp_y = temp.get('eye_gaze_screen_fraction_y')
             with mss.mss() as mss_instance:
-                monitor_1 = mss_instance.monitors[2]
+                monitor_1 = mss_instance.monitors[1]
                 img = mss_instance.grab(monitor_1)
                 screen_frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
                 try:
@@ -330,7 +369,7 @@ class ScreenRecorder(QThread):
                     else:
                         list_st.append([temp_x * 1920, temp_y * 1080])
                 except TypeError:
-                    print(' ')
+                    pass
 
                 if len(list_st) > 2:
                     if (list_st[len(list_st) - 1][0] - 5 < list_st[len(list_st) - 1][0] < list_st[len(list_st) - 2][
@@ -340,12 +379,17 @@ class ScreenRecorder(QThread):
                             (list_st[len(list_st) - 1][0] == list_st[len(list_st) - 2][0] and list_st[len(list_st) - 1][
                                 1] == list_st[len(list_st) - 2][1]):
                         radius += 50
+                    else:
+                        radius = 10
                     circle = cv2.circle(screen_frame, (int(list_st[-1][0]), int(list_st[-1][1])), radius, (255, 255, 0),
                                         thickness=15)
                     cv2.line(circle, [int(list_st[len(list_st) - 2][0]), int(list_st[len(list_st) - 2][1])],
                              [int(list_st[len(list_st) - 1][0]), int(list_st[len(list_st) - 1][1])], (0, 0, 0))
                     circle1 = cv2.cvtColor(circle, cv2.COLOR_BGR2RGB)
                     circle2 = cv2.cvtColor(circle1, cv2.COLOR_BGR2RGB)
+
+
+                    out.write(cv2.cvtColor(circle2, cv2.COLOR_BGR2RGB))
 
                     ConvertToQtFormat = QImage(circle2.data, circle2.shape[1], circle2.shape[0],
                                                QImage.Format_RGB888)
