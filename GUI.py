@@ -256,13 +256,13 @@ class Ui_MainWindow(object):
         temp_eeg = eeg_queue.get()
 
         global created_file
-        global beggin_time
+        global begin_time
         with open(created_file[0] + "_eeg_data.csv", 'a', newline="") as file:
             writer = csv.writer(file)
             if os.stat(created_file[0] + "_eeg_data.csv").st_size == 0:
                 writer.writerow(["time", "Approach_Withdrawal", "Interest", "Cognitive_Load", "Valence", "Concentration"])
             try:
-                current_time_eeg = time.time() - beggin_time
+                current_time_eeg = time.time() - begin_time
                 writer.writerow([current_time_eeg, temp_eeg["Approach_Withdrawal"][0], temp_eeg["Interest"][0], temp_eeg["Cognitive_Load"][0], temp_eeg["Valence"][0], temp_eeg["Concentration"][0]])
             except KeyError:
                 print("something wrong with writing openbci")
@@ -426,7 +426,7 @@ class ScreenRecorder(QThread):
 
     def run(self):
         global created_file
-        global beggin_time
+        global begin_time
         list_st = []
         ThreadActive = True
         radius = 10
@@ -438,7 +438,7 @@ class ScreenRecorder(QThread):
                 if os.stat(created_file[0] + "_tracker_data.csv").st_size == 0:
                     writer.writerow(["time", "X", "y"])
                 try:
-                    current_time_tracker = time.time() - beggin_time
+                    current_time_tracker = time.time() - begin_time
                     writer.writerow([current_time_tracker, temp.get('eye_gaze_screen_fraction_x'), temp.get('eye_gaze_screen_fraction_y')])
                 except KeyError:
                     print("something wrong with writing eye_tracker")
