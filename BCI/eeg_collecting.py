@@ -172,8 +172,10 @@ def collecting_data(board, board_id, sampling_rate, eeg_channels):
             valence_meaning = "{} channel is not connected".format(not_connected_channel)
             concentration_meaning = "{} channel is not connected".format(not_connected_channel)
         #print("AW: ", aw, "; Choice Score: ", choise, '; Cognit Load: ', cogn_load, '; Valence: ', valence, "\n\n")
+        
         openbci_data = {"Approach_Withdrawal": [aw, aw_meaning], "Interest": [choise, choise_meaning], "Cognitive_Load": [cogn_load, cogn_load_meaning], \
         "Valence": [valence, valence_meaning], "Concentration": [concentration_score, concentration_meaning]}
+        
         return openbci_data
     except:
         print("Data from BCI was not connected!", sys.exc_info()[0])

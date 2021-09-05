@@ -11,7 +11,7 @@ import random
 import mss as mss
 import numpy
 from PIL import Image
-import sys
+import sys, os, json, csv, time
 
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -30,6 +30,8 @@ from tracker.collect_eye_biometric_data import collect_eye_biometrics
 eye_tracker_queue = Queue()
 eeg_queue = Queue()
 
+global begin_time
+begin_time = time.time()
 resolution = (1920, 1080)
 
 codec = cv2.VideoWriter_fourcc(*"XVID")
@@ -41,9 +43,6 @@ out = cv2.VideoWriter(filename, codec, fps, resolution)
 
 
 class Ui_MainWindow(object):
-    '''
-    Interface of the application.
-    '''
 
     def setupUi(self, MainWindow, com_port):
         '''
@@ -57,6 +56,7 @@ class Ui_MainWindow(object):
             Nothing.
 
         '''
+    
         self.com_port = com_port
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1920, 1080)
@@ -64,6 +64,9 @@ class Ui_MainWindow(object):
         pg.setConfigOption('background', 'w')
         self.centralwidget.setObjectName("centralwidget")
         self.graph_cognitive = pg.PlotWidget(self.centralwidget)
+
+        self.graph_cognitive.setGeometry(QtCore.QRect(10, 30, 500, 250))
+
         self.graph_cognitive.setGeometry(QtCore.QRect(10, 720, 920, 220))
         self.graph_cognitive.setObjectName("graph_cognitive")
         self.graph_cognitive.setLimits(yMin=0, yMax=1)
@@ -78,6 +81,9 @@ class Ui_MainWindow(object):
         # self.graph_interest.setLabel('top', 'Interest')
         # self.graph_interest.setLimits(yMin=-0.5, yMax=0.5)
         self.graph_approach = pg.PlotWidget(self.centralwidget)
+
+        self.graph_approach.setGeometry(QtCore.QRect(1200, 620, 600, 350))
+
         self.graph_approach.setGeometry(QtCore.QRect(950, 720, 960, 220))
         self.graph_approach.setObjectName("graph_approach")
         self.graph_approach.setLimits(yMin=-1, yMax=1)
@@ -91,7 +97,11 @@ class Ui_MainWindow(object):
         self.Screen = QtWidgets.QHBoxLayout(self.centralwidget)
         self.Feed = QtWidgets.QLabel(self.centralwidget)
         self.Screen.addWidget(self.Feed)
+
         self.Screen.setContentsMargins(5, 5, 500, 550)
+
+        self.Screen.setContentsMargins(600, 30, 1600, 800)
+
         self.Worker1 = ScreenRecorder()
         self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -139,7 +149,10 @@ class Ui_MainWindow(object):
         self.startbutton.setMinimumSize(QtCore.QSize(0, 23))
         self.startbutton.setIconSize(QtCore.QSize(16, 25))
         self.startbutton.setObjectName("startbutton")
-
+        self.menuRun.triggered.connect(self.clicked)
+        self.actionCreate_Project.triggered.connect(self.create_project)
+        self.actionOpen_Project.triggered.connect(self.open_project)
+        self.actionSave_Project.triggered.connect(self.save_project)
         self.menuRun.triggered.connect(self.start_analysis)
         self.actionStart_OpenBCI.triggered.connect(self.popup_bsi)
         self.actionCalibrate_Eye_Traker.triggered.connect(self.popup_gaze)
@@ -148,10 +161,20 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-    # def popup_settings(self):
-    #     window = QWindow()
-    #     window.show()
-    #     # pop.show()
+    def create_project(self):
+        #dir_ = QtWidgets.QFileDialog.getExistingDirectory(None, 'Select project folder:', 'C:\\', QtWidgets.QFileDialog.ShowDirsOnly)
+        global created_file
+        created_file = QFileDialog.getSaveFileName(None, "Create file", "", ".prj")
+        print(created_file)
+        self.current_file = open(created_file[0] + created_file[1], 'a', newline="")
+
+    def open_project(self):
+        self.opened_file = QFileDialog.getOpenFileName(None, "Open file")
+        print(self.opened_file)
+        self.current_file = open(self.opened_file[0], 'a', newline="")
+        
+    def save_project(self):
+        self.current_file.close()
 
     def popup_bsi(self):
         print("Opening a new popup window...")
@@ -210,10 +233,20 @@ class Ui_MainWindow(object):
             Returns:
                 Nothing.
 
+=======
+
+    
+
+        global eye_tracker_queue, eeg_queue
+
+        depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue, ))
+
+
         """
         global eye_tracker_queue, eeg_queue
         self.startbutton.setText("Stop Recording")
         depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue,))
+
         depicting_gazepoint.start()
 
         # depicting_openbci = Process(target=eeg, args=(self.com_port, eeg_queue))
@@ -222,6 +255,20 @@ class Ui_MainWindow(object):
         self.Worker1.start()
         self.x = list(range(60))  # 100 time points
         # temp_eeg = eeg_queue.get()
+        temp_eeg = eeg_queue.get()
+
+        global created_file
+        global begin_time
+        with open(created_file[0] + "_eeg_data.csv", 'a', newline="") as file:
+            writer = csv.writer(file)
+            if os.stat(created_file[0] + "_eeg_data.csv").st_size == 0:
+                writer.writerow(["time", "Approach_Withdrawal", "Interest", "Cognitive_Load", "Valence", "Concentration"])
+            try:
+                current_time_eeg = time.time() - begin_time
+                writer.writerow([current_time_eeg, temp_eeg["Approach_Withdrawal"][0], temp_eeg["Interest"][0], temp_eeg["Cognitive_Load"][0], temp_eeg["Valence"][0], temp_eeg["Concentration"][0]])
+            except KeyError:
+                print("something wrong with writing openbci")
+            file.close()
         # if len(temp_eeg) > 1:
         #     self.y_interst = temp_eeg.get('Interest'[0])
         #     self.y_valence = temp_eeg.get('Valence'[0])
@@ -229,6 +276,23 @@ class Ui_MainWindow(object):
         #     self.y_interst = temp_eeg.get('Cognitive_Load'[0])
         #     self.y_interst = temp_eeg.get('Approach_Withdrawal'[0])
         # else:
+
+        self.y_interst = [0] * 100  # 100 data points
+        self.y_valence = [0] * 100  # 100 data points
+        self.y_concentration = [0] * 100  # 100 data points
+        self.y_cognitive = [0] * 100  # 100 data points
+        self.y_approach = [0] * 100  # 100 data points
+
+        pen = pg.mkPen(color=(255, 0, 0))
+        self.data_line_interest = self.graph_interest.plot(self.x, self.y_interst, pen=pen)
+        self.data_line_valence = self.graph_valence.plot(self.x, self.y_valence, pen=pen)
+        self.data_line_cognitive = self.graph_cognitive.plot(self.x, self.y_cognitive, pen=pen)
+        self.data_line_concentration = self.graph_concentration.plot(self.x, self.y_concentration, pen=pen)
+        self.data_line_approach = self.graph_approach.plot(self.x, self.y_approach, pen=pen)
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(1000)
+        self.timer.timeout.connect(self.update_plot_data_interest)
+
         self.y_interst = [0] * 60  # 100 data points
         self.y_valence = [0] * 60  # 100 data points
         self.y_concentration = [0] * 60  # 100 data points
@@ -313,7 +377,7 @@ class Ui_MainWindow(object):
         self.y_approach = self.y_approach[1:]  # Remove the first
         self.y_approach.append(random.uniform(-1, 1))  # Add a new random value.
 
-        self.data_line_approach.setData(self.x, self.y_approach)  # Update the data
+        self.data_line_approach.setData(self.x, self.y_approach)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -348,14 +412,30 @@ class MyPopup(QWidget):
 
 class ScreenRecorder(QThread):
     global eye_tracker_queue
+    
     ImageUpdate = pyqtSignal(QImage)
 
     def run(self):
+        global created_file
+        global begin_time
         list_st = []
         ThreadActive = True
         radius = 10
         while ThreadActive:
             temp = eye_tracker_queue.get()
+            
+            with open(created_file[0] + "_tracker_data.csv", 'a', newline="") as file:
+                writer = csv.writer(file)
+                if os.stat(created_file[0] + "_tracker_data.csv").st_size == 0:
+                    writer.writerow(["time", "X", "y"])
+                try:
+                    current_time_tracker = time.time() - begin_time
+                    writer.writerow([current_time_tracker, temp.get('eye_gaze_screen_fraction_x'), temp.get('eye_gaze_screen_fraction_y')])
+                except KeyError:
+                    print("something wrong with writing eye_tracker")
+                file.close()
+            radius = 10
+
             print(eye_tracker_queue.qsize())
             temp_x = temp.get('eye_gaze_screen_fraction_x')
             temp_y = temp.get('eye_gaze_screen_fraction_y')
@@ -363,6 +443,7 @@ class ScreenRecorder(QThread):
                 monitor_1 = mss_instance.monitors[1]
                 img = mss_instance.grab(monitor_1)
                 screen_frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
+
                 try:
                     if temp_x is None or temp_y is None:
                         list_st.append([temp_x * 0, temp_y * 0])
@@ -370,6 +451,9 @@ class ScreenRecorder(QThread):
                         list_st.append([temp_x * 1920, temp_y * 1080])
                 except TypeError:
                     pass
+                if len(temp) > 1:
+                    list_st.append([temp_x * 1920, temp_y * 1080])
+
 
                 if len(list_st) > 2:
                     if (list_st[len(list_st) - 1][0] - 5 < list_st[len(list_st) - 1][0] < list_st[len(list_st) - 2][
@@ -394,4 +478,7 @@ class ScreenRecorder(QThread):
                     ConvertToQtFormat = QImage(circle2.data, circle2.shape[1], circle2.shape[0],
                                                QImage.Format_RGB888)
                     Pic = ConvertToQtFormat.scaled(1700, 600, Qt.KeepAspectRatio)
+
                     self.ImageUpdate.emit(Pic)
+
+
