@@ -14,7 +14,7 @@ from BCI.psd_indexes import (approach_withdrawal_score,
                                         valence_score)
 
 
-def eeg(com_port, eeg_queue):
+def eeg(com_port, eeg_queue, connected_BCI):
     '''
     Setting parameters for board connection. Connect to board. Receiving data from board and put it into the queue.
 
@@ -35,7 +35,7 @@ def eeg(com_port, eeg_queue):
     sampling_rate = BoardShim.get_sampling_rate(board_id)   
     eeg_channels = BoardShim.get_eeg_channels(board_id)
 
-    connect_to_cyton(board)
+    connected_BCI = connect_to_cyton(board)
     while True:
         openbci_data = collecting_data(board, board_id, sampling_rate, eeg_channels)
         eeg_queue.put(openbci_data)
