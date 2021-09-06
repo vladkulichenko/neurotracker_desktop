@@ -75,7 +75,6 @@ def collect_eye_biometrics(biometrics_queue):
         data = process_biometrics(bytes.decode(rxdat))
         biometrics_queue.put(data)
         # just to slow-down  sampling rate for nice vizualization
-        time.sleep(0.065)
-        biometrics_queue.put(process_biometrics(bytes.decode(rxdat)))
+        time.sleep(0.075)
         # just to slow-down  sampling rate for nice visualization
 

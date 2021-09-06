@@ -82,7 +82,7 @@ class Ui_MainWindow(object):
         # self.graph_interest.setLimits(yMin=-0.5, yMax=0.5)
         self.graph_approach = pg.PlotWidget(self.centralwidget)
 
-        self.graph_approach.setGeometry(QtCore.QRect(1200, 620, 600, 350))
+        # self.graph_approach.setGeometry(QtCore.QRect(1200, 620, 600, 350))
 
         self.graph_approach.setGeometry(QtCore.QRect(950, 720, 960, 220))
         self.graph_approach.setObjectName("graph_approach")
@@ -100,7 +100,7 @@ class Ui_MainWindow(object):
 
         self.Screen.setContentsMargins(5, 5, 500, 550)
 
-        self.Screen.setContentsMargins(600, 30, 1600, 800)
+        # self.Screen.setContentsMargins(600, 30, 1600, 800)
 
         self.Worker1 = ScreenRecorder()
         self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
@@ -115,6 +115,13 @@ class Ui_MainWindow(object):
         self.menuSettings = QtWidgets.QMenu(self.menubar)
         self.menuSettings.setObjectName("menuSettings")
         self.menuRun = QtWidgets.QMenu(self.menubar)
+
+        self.actionCreate_Project = QtWidgets.QAction(MainWindow)
+        self.actionCreate_Project.setObjectName("actionCreate_Project")
+        self.actionOpen_Project = QtWidgets.QAction(MainWindow)
+        self.actionOpen_Project.setObjectName("actionOpen_Project")
+        self.actionSave_Project = QtWidgets.QAction(MainWindow)
+        self.actionSave_Project.setObjectName("actionSave_Project")
         self.menuRun.setObjectName("menuRun")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -134,6 +141,15 @@ class Ui_MainWindow(object):
         self.actionRun.setObjectName("Run")
         self.actionSettings = QtWidgets.QAction(MainWindow)
         self.actionSettings.setObjectName("Settings")
+        self.menuFile.addAction(self.actionCreate_Project)
+        self.actionCreate_Project.setShortcut('Ctrl+N')
+        self.actionCreate_Project.setStatusTip('New project')
+        self.menuFile.addAction(self.actionOpen_Project)
+        self.actionOpen_Project.setShortcut('Ctrl+O')
+        self.actionOpen_Project.setStatusTip('Open project')
+        self.menuFile.addAction(self.actionSave_Project)
+        self.actionSave_Project.setShortcut('Ctrl+S')
+        self.actionSave_Project.setStatusTip('Save project')
         self.menuSettings.addAction(self.actionSettings)
         self.menuStart.addAction(self.actionConnect_devices)
         self.menuSettings.addAction(self.actionStart_OpenBCI)
@@ -149,7 +165,6 @@ class Ui_MainWindow(object):
         self.startbutton.setMinimumSize(QtCore.QSize(0, 23))
         self.startbutton.setIconSize(QtCore.QSize(16, 25))
         self.startbutton.setObjectName("startbutton")
-        self.menuRun.triggered.connect(self.clicked)
         self.actionCreate_Project.triggered.connect(self.create_project)
         self.actionOpen_Project.triggered.connect(self.open_project)
         self.actionSave_Project.triggered.connect(self.save_project)
@@ -232,17 +247,10 @@ class Ui_MainWindow(object):
 
             Returns:
                 Nothing.
-
-=======
+        """
 
     
 
-        global eye_tracker_queue, eeg_queue
-
-        depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue, ))
-
-
-        """
         global eye_tracker_queue, eeg_queue
         self.startbutton.setText("Stop Recording")
         depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue,))
@@ -255,7 +263,7 @@ class Ui_MainWindow(object):
         self.Worker1.start()
         self.x = list(range(60))  # 100 time points
         # temp_eeg = eeg_queue.get()
-        temp_eeg = eeg_queue.get()
+        # temp_eeg = eeg_queue.get()
 
         global created_file
         global begin_time
@@ -265,7 +273,7 @@ class Ui_MainWindow(object):
                 writer.writerow(["time", "Approach_Withdrawal", "Interest", "Cognitive_Load", "Valence", "Concentration"])
             try:
                 current_time_eeg = time.time() - begin_time
-                writer.writerow([current_time_eeg, temp_eeg["Approach_Withdrawal"][0], temp_eeg["Interest"][0], temp_eeg["Cognitive_Load"][0], temp_eeg["Valence"][0], temp_eeg["Concentration"][0]])
+                writer.writerow([current_time_eeg]) #temp_eeg["Approach_Withdrawal"][0], temp_eeg["Interest"][0], temp_eeg["Cognitive_Load"][0], temp_eeg["Valence"][0], temp_eeg["Concentration"][0]])
             except KeyError:
                 print("something wrong with writing openbci")
             file.close()
@@ -276,22 +284,6 @@ class Ui_MainWindow(object):
         #     self.y_interst = temp_eeg.get('Cognitive_Load'[0])
         #     self.y_interst = temp_eeg.get('Approach_Withdrawal'[0])
         # else:
-
-        self.y_interst = [0] * 100  # 100 data points
-        self.y_valence = [0] * 100  # 100 data points
-        self.y_concentration = [0] * 100  # 100 data points
-        self.y_cognitive = [0] * 100  # 100 data points
-        self.y_approach = [0] * 100  # 100 data points
-
-        pen = pg.mkPen(color=(255, 0, 0))
-        self.data_line_interest = self.graph_interest.plot(self.x, self.y_interst, pen=pen)
-        self.data_line_valence = self.graph_valence.plot(self.x, self.y_valence, pen=pen)
-        self.data_line_cognitive = self.graph_cognitive.plot(self.x, self.y_cognitive, pen=pen)
-        self.data_line_concentration = self.graph_concentration.plot(self.x, self.y_concentration, pen=pen)
-        self.data_line_approach = self.graph_approach.plot(self.x, self.y_approach, pen=pen)
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(1000)
-        self.timer.timeout.connect(self.update_plot_data_interest)
 
         self.y_interst = [0] * 60  # 100 data points
         self.y_valence = [0] * 60  # 100 data points
@@ -393,6 +385,7 @@ class Ui_MainWindow(object):
         self.actionStart_OpenBCI.setText(_translate("MainWindow", "Calibrate BCI"))
         self.actionCreate_Project.setText(_translate("MainWindow", "Create Project"))
         self.actionOpen_Project.setText(_translate("MainWindow", "Open Project"))
+        self.actionSave_Project.setText(_translate("MainWindow", "Save Project"))
         self.actionCalibrate_Eye_Traker.setText(_translate("MainWindow", "Calibrate Eye Tracker"))
 
     def ImageUpdateSlot(self, Image):
@@ -411,74 +404,53 @@ class MyPopup(QWidget):
 
 
 class ScreenRecorder(QThread):
-    global eye_tracker_queue
-    
-    ImageUpdate = pyqtSignal(QImage)
+        global eye_tracker_queue, begin_time
+        ImageUpdate = pyqtSignal(QImage)
 
-    def run(self):
-        global created_file
-        global begin_time
-        list_st = []
-        ThreadActive = True
-        radius = 10
-        while ThreadActive:
-            temp = eye_tracker_queue.get()
-            
-            with open(created_file[0] + "_tracker_data.csv", 'a', newline="") as file:
-                writer = csv.writer(file)
-                if os.stat(created_file[0] + "_tracker_data.csv").st_size == 0:
-                    writer.writerow(["time", "X", "y"])
-                try:
-                    current_time_tracker = time.time() - begin_time
-                    writer.writerow([current_time_tracker, temp.get('eye_gaze_screen_fraction_x'), temp.get('eye_gaze_screen_fraction_y')])
-                except KeyError:
-                    print("something wrong with writing eye_tracker")
-                file.close()
+        def run(self):
+            list_st = []
+            ThreadActive = True
             radius = 10
+            while ThreadActive:
+                temp = eye_tracker_queue.get()
+                print(eye_tracker_queue.qsize())
+                temp_x = temp.get('eye_gaze_screen_fraction_x')
+                temp_y = temp.get('eye_gaze_screen_fraction_y')
+                with mss.mss() as mss_instance:
+                    monitor_1 = mss_instance.monitors[1]
+                    img = mss_instance.grab(monitor_1)
+                    screen_frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
+                    try:
+                        if temp_x is None or temp_y is None:
+                            raise TypeError
+                        else:
+                            list_st.append([temp_x * 1920, temp_y * 1080])
+                    except TypeError:
+                        print(" ")
 
-            print(eye_tracker_queue.qsize())
-            temp_x = temp.get('eye_gaze_screen_fraction_x')
-            temp_y = temp.get('eye_gaze_screen_fraction_y')
-            with mss.mss() as mss_instance:
-                monitor_1 = mss_instance.monitors[1]
-                img = mss_instance.grab(monitor_1)
-                screen_frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
+                    if len(list_st) > 2:
+                        if (list_st[len(list_st) - 1][0] - 5 < list_st[len(list_st) - 1][0] < list_st[len(list_st) - 2][
+                            0] + 5 \
+                            and list_st[len(list_st) - 1][1] - 5 < list_st[len(list_st) - 1][1] <
+                            list_st[len(list_st) - 2][
+                                1] + 5) or \
+                                (list_st[len(list_st) - 1][0] == list_st[len(list_st) - 2][0] and
+                                 list_st[len(list_st) - 1][
+                                     1] == list_st[len(list_st) - 2][1]):
+                            radius += 50
+                        else:
+                            radius = 10
+                        circle = cv2.circle(screen_frame, (int(list_st[-1][0]), int(list_st[-1][1])), radius,
+                                            (255, 255, 0),
+                                            thickness=15)
+                        cv2.line(circle, [int(list_st[len(list_st) - 2][0]), int(list_st[len(list_st) - 2][1])],
+                                 [int(list_st[len(list_st) - 1][0]), int(list_st[len(list_st) - 1][1])], (0, 0, 0))
+                        circle1 = cv2.cvtColor(circle, cv2.COLOR_BGR2RGB)
+                        circle2 = cv2.cvtColor(circle1, cv2.COLOR_BGR2RGB)
 
-                try:
-                    if temp_x is None or temp_y is None:
-                        list_st.append([temp_x * 0, temp_y * 0])
-                    else:
-                        list_st.append([temp_x * 1920, temp_y * 1080])
-                except TypeError:
-                    pass
-                if len(temp) > 1:
-                    list_st.append([temp_x * 1920, temp_y * 1080])
+                        out.write(cv2.cvtColor(circle2, cv2.COLOR_BGR2RGB))
 
-
-                if len(list_st) > 2:
-                    if (list_st[len(list_st) - 1][0] - 5 < list_st[len(list_st) - 1][0] < list_st[len(list_st) - 2][
-                        0] + 5 \
-                        and list_st[len(list_st) - 1][1] - 5 < list_st[len(list_st) - 1][1] < list_st[len(list_st) - 2][
-                            1] + 5) or \
-                            (list_st[len(list_st) - 1][0] == list_st[len(list_st) - 2][0] and list_st[len(list_st) - 1][
-                                1] == list_st[len(list_st) - 2][1]):
-                        radius += 50
-                    else:
-                        radius = 10
-                    circle = cv2.circle(screen_frame, (int(list_st[-1][0]), int(list_st[-1][1])), radius, (255, 255, 0),
-                                        thickness=15)
-                    cv2.line(circle, [int(list_st[len(list_st) - 2][0]), int(list_st[len(list_st) - 2][1])],
-                             [int(list_st[len(list_st) - 1][0]), int(list_st[len(list_st) - 1][1])], (0, 0, 0))
-                    circle1 = cv2.cvtColor(circle, cv2.COLOR_BGR2RGB)
-                    circle2 = cv2.cvtColor(circle1, cv2.COLOR_BGR2RGB)
-
-
-                    out.write(cv2.cvtColor(circle2, cv2.COLOR_BGR2RGB))
-
-                    ConvertToQtFormat = QImage(circle2.data, circle2.shape[1], circle2.shape[0],
-                                               QImage.Format_RGB888)
-                    Pic = ConvertToQtFormat.scaled(1700, 600, Qt.KeepAspectRatio)
-
-                    self.ImageUpdate.emit(Pic)
-
-
+                        ConvertToQtFormat = QImage(circle2.data, circle2.shape[1], circle2.shape[0],
+                                                   QImage.Format_RGB888)
+                        Pic = ConvertToQtFormat.scaled(1700, 600, Qt.KeepAspectRatio)
+                        self.ImageUpdate.emit(Pic)
