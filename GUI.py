@@ -30,8 +30,6 @@ from tracker.collect_eye_biometric_data import collect_eye_biometrics
 eye_tracker_queue = Queue()
 eeg_queue = Queue()
 
-global begin_time
-begin_time = time.time()
 resolution = (1920, 1080)
 
 codec = cv2.VideoWriter_fourcc(*"XVID")
@@ -266,14 +264,17 @@ class Ui_MainWindow(object):
         # temp_eeg = eeg_queue.get()
 
         global created_file
-        global begin_time
+
+        begin_time = time.time()
+
         with open(created_file[0] + "_eeg_data.csv", 'a', newline="") as file:
             writer = csv.writer(file)
             if os.stat(created_file[0] + "_eeg_data.csv").st_size == 0:
                 writer.writerow(["time", "Approach_Withdrawal", "Interest", "Cognitive_Load", "Valence", "Concentration"])
             try:
                 current_time_eeg = time.time() - begin_time
-                writer.writerow([current_time_eeg]) #temp_eeg["Approach_Withdrawal"][0], temp_eeg["Interest"][0], temp_eeg["Cognitive_Load"][0], temp_eeg["Valence"][0], temp_eeg["Concentration"][0]])
+                writer.writerow([current_time_eeg])
+                #temp_eeg["Approach_Withdrawal"][0], temp_eeg["Interest"][0], temp_eeg["Cognitive_Load"][0], temp_eeg["Valence"][0], temp_eeg["Concentration"][0]])
             except KeyError:
                 print("something wrong with writing openbci")
             file.close()
