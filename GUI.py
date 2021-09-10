@@ -35,6 +35,9 @@ resolution = (1920, 1080)
 codec = cv2.VideoWriter_fourcc(*"XVID")
 
 filename = "Recording.avi"
+# height =
+# width =
+ThreadActive = True
 
 fps = 24
 out = cv2.VideoWriter(filename, codec, fps, resolution)
@@ -78,7 +81,7 @@ class Ui_MainWindow(object):
         self.Screen = QtWidgets.QHBoxLayout(self.centralwidget)
         self.Feed = QtWidgets.QLabel(self.centralwidget)
         self.Screen.addWidget(self.Feed) 
-        self.Screen.setContentsMargins(5, 5, 500, 550) 
+        self.Screen.setContentsMargins(5, 5, 1800, 650)
         self.ScreenRecorder = ScreenRecorder()
         self.ScreenRecorder.ImageUpdate.connect(self.ImageUpdateSlot)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -198,6 +201,7 @@ class Ui_MainWindow(object):
         self.settings_w.show()
 
     def CancelFeed(self):
+        self.timer.stop()
         self.ScreenRecorder.stop()
 
     def popup_gaze(self):
@@ -225,11 +229,14 @@ class Ui_MainWindow(object):
                 Nothing.
         """
         global eye_tracker_queue, eeg_queue
+
         self.startbutton.setText("Stop Recording")
+
         global connected_BCI
+
         connected_BCI = False
-        depicting_openbci = Process(target=eeg, args=(self.com_port, eeg_queue, connected_BCI))
-        depicting_openbci.start()
+        # depicting_openbci = Process(target=eeg, args=(self.com_port, eeg_queue, connected_BCI))
+        # depicting_openbci.start()
 
         depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue,))
         depicting_gazepoint.start()
@@ -241,13 +248,11 @@ class Ui_MainWindow(object):
         global begin_time
         begin_time = time.time()
 
-        
-
-        self.y_interst = [0] * 60
-        self.y_valence = [0] * 60
-        self.y_concentration = [0] * 60
-        self.y_cognitive = [0] * 60
-        self.y_approach = [0] * 60
+        # self.y_interst = [0] * 60
+        # self.y_valence = [0] * 60
+        # self.y_concentration = [0] * 60
+        # self.y_cognitive = [0] * 60
+        # self.y_approach = [0] * 60
 
         pen_approach = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(0, 255, 0))
         pen_valence = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(255, 0, 255))
@@ -263,9 +268,9 @@ class Ui_MainWindow(object):
         self.data_line_approach = self.graph_approach.plot(self.x, self.y_approach, antialias=True, pen=pen_approach,
                                                            name="Approach")
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(3000)
+        self.timer.setInterval(1000)
 
-        self.timer.timeout.connect(self.updater)
+        # self.timer.timeout.connect(self.updater)
 
         self.timer.start() 
 
@@ -291,9 +296,11 @@ class Ui_MainWindow(object):
             self.x.append(self.x[-1] + 1)
 
             self.y_valence = self.y_valence[1:]
-            self.y_valence.append(float(temp_eeg.get('Valence')[0]))
-
-            self.data_line_valence.setData(self.x, self.y_valence)  
+            if float(temp_eeg.get('Valence')[0]) == 0:
+                pass
+            else:
+                self.y_valence.append(float(temp_eeg.get('Valence')[0]))
+                self.data_line_valence.setData(self.x, self.y_valence)
 
         def update_plot_data_cognitive(self):
             global temp_eeg
@@ -301,26 +308,33 @@ class Ui_MainWindow(object):
             self.x.append(self.x[-1] + 1)
 
             self.y_cognitive = self.y_cognitive[1:]
-            self.y_cognitive.append(float(temp_eeg.get('Cognitive_Load')[0]))
-
-            self.data_line_cognitive.setData(self.x, self.y_cognitive)
+            if float(temp_eeg.get('Cognitive_Load')[0]) == 0:
+                pass
+            else:
+                self.y_cognitive.append(float(temp_eeg.get('Cognitive_Load')[0]))
+                self.data_line_cognitive.setData(self.x, self.y_cognitive)
     
         def update_plot_data_concentration(self):
             self.x = self.x[1:]
             self.x.append(self.x[-1] + 1)
 
             self.y_concentration = self.y_concentration[1:]
-            self.y_concentration.append(float(temp_eeg.get('Concentration')[0]))
-            self.data_line_concentration.setData(self.x, self.y_concentration)
+            if float(temp_eeg.get('Concentration')[0]) == 0:
+                pass
+            else:
+                self.y_concentration.append(float(temp_eeg.get('Concentration')[0]))
+                self.data_line_concentration.setData(self.x, self.y_concentration)
 
         def update_plot_data_approach(self):
             self.x = self.x[1:]
             self.x.append(self.x[-1] + 1)
 
             self.y_approach = self.y_approach[1:]
-            self.y_approach.append(float(temp_eeg.get('Approach_Withdrawal')[0])) 
-
-            self.data_line_approach.setData(self.x, self.y_approach)
+            if float(temp_eeg.get('Approach_Withdrawal')[0]) == 0:
+                pass
+            else:
+                self.y_approach.append(float(temp_eeg.get('Approach_Withdrawal')[0]))
+                self.data_line_approach.setData(self.x, self.y_approach)
 
         
         update_plot_data_valence(self)
@@ -350,7 +364,8 @@ class Ui_MainWindow(object):
         self.Feed.setPixmap(QPixmap.fromImage(Image))
 
     def CancelFeed(self):
-        self.ScreenRecorder.quit()
+        self.ScreenRecorder.stop()
+
 
 class MyPopup(QWidget):
     def __init__(self, name):
@@ -358,24 +373,27 @@ class MyPopup(QWidget):
         self.name = name
         self.setWindowTitle(self.name)
 
+
 class ScreenRecorder(QThread):
-        global eye_tracker_queue
+
+        global eye_tracker_queue, ThreadActive
         ImageUpdate = pyqtSignal(QImage)
 
         def run(self):
             list_st = []
-            ThreadActive = True
             radius = 20
             while ThreadActive:
-                global begin_time
-                global created_file
-                temp = eye_tracker_queue.get()   
-                
+                global begin_time, created_file
+                if eye_tracker_queue.empty():
+                    temp = {'eye_gaze_screen_fraction_x': 0, 'eye_gaze_screen_fraction_y': 0}
+                while not eye_tracker_queue.empty():
+                    temp = eye_tracker_queue.get()
+
                 with mss.mss() as mss_instance:
                     temp_x = temp.get('eye_gaze_screen_fraction_x')
                     temp_y = temp.get('eye_gaze_screen_fraction_y')
                     
-                    monitor_1 = mss_instance.monitors[2]
+                    monitor_1 = mss_instance.monitors[1]
                     img = mss_instance.grab(monitor_1)
                     screen_frame = cv2.cvtColor(np.array(img), cv2.COLOR_BGR2RGB)
                     try:
@@ -383,16 +401,16 @@ class ScreenRecorder(QThread):
                             raise TypeError
                         else:
                             list_st.append([temp_x * 1920, temp_y * 1080])
-                            with open(created_file[0] + "_tracker_data.csv", 'a', newline="") as file:
-                                writer = csv.writer(file)
-                                if os.stat(created_file[0] + "_tracker_data.csv").st_size == 0:
-                                    writer.writerow(["time", "X", "y"])
-                                try:
-                                    current_time_tracker = time.time() - begin_time
-                                    writer.writerow([current_time_tracker, temp.get('eye_gaze_screen_fraction_x'), temp.get('eye_gaze_screen_fraction_y')])
-                                except KeyError:
-                                    print("something wrong with writing eye_tracker")
-                                file.close()
+                            # with open(created_file[0] + "_tracker_data.csv", 'a', newline="") as file:
+                            #     writer = csv.writer(file)
+                            #     if os.stat(created_file[0] + "_tracker_data.csv").st_size == 0:
+                            #         writer.writerow(["time", "X", "y"])
+                            #     try:
+                            #         current_time_tracker = time.time() - begin_time
+                            #         writer.writerow([current_time_tracker, temp.get('eye_gaze_screen_fraction_x'), temp.get('eye_gaze_screen_fraction_y')])
+                            #     except KeyError:
+                            #         print("something wrong with writing eye_tracker")
+                            #     file.close()
                     except TypeError:
                         pass
 
@@ -405,12 +423,18 @@ class ScreenRecorder(QThread):
                                 (list_st[len(list_st) - 1][0] == list_st[len(list_st) - 2][0] and
                                  list_st[len(list_st) - 1][
                                      1] == list_st[len(list_st) - 2][1]):
-                            radius += 5
+                            radius += 1
                         else:
-                            radius = 20
+                            radius = 10
                         circle = cv2.circle(screen_frame, (int(list_st[-1][0]), int(list_st[-1][1])), radius,
                                             (255, 255, 0),
                                             thickness=2)
+                        cv2.circle(circle, (int(list_st[len(list_st) - 2][0]), int(list_st[len(list_st) - 2][1])),
+                                   radius - 1, (255, 0, 255), thickness=2)
+                        cv2.circle(circle, (int(list_st[len(list_st) - 3][0]), int(list_st[len(list_st) - 3][1])),
+                                   radius - 3, (255, 55, 0), thickness=2)
+                        cv2.circle(circle, (int(list_st[len(list_st) - 4][0]), int(list_st[len(list_st) - 4][1])),
+                                   radius - 5, (255, 0, 55), thickness=2)
                         cv2.line(circle, [int(list_st[len(list_st) - 2][0]), int(list_st[len(list_st) - 2][1])],
                                  [int(list_st[len(list_st) - 1][0]), int(list_st[len(list_st) - 1][1])], (0, 0, 0))
                         circle1 = cv2.cvtColor(circle, cv2.COLOR_BGR2RGB)
@@ -420,5 +444,14 @@ class ScreenRecorder(QThread):
 
                         ConvertToQtFormat = QImage(circle2.data, circle2.shape[1], circle2.shape[0],
                                                    QImage.Format_RGB888)
-                        Pic = ConvertToQtFormat.scaled(1700, 600, Qt.KeepAspectRatio)
+                        # Pic = ConvertToQtFormat.setWidth(1890)
+                        Pic = ConvertToQtFormat.scaled(1800, 600, Qt.KeepAspectRatio)
                         self.ImageUpdate.emit(Pic)
+                        if len(list_st) >= 11:
+                            list_st = list_st[5:]
+                            print(list_st)
+
+        def stop(self):
+            global ThreadActive
+            ThreadActive = False
+            self.quit()
