@@ -21,6 +21,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import cv2
+import pandas as pd
 
 from multiprocessing import Process, Queue
 
@@ -235,8 +236,8 @@ class Ui_MainWindow(object):
         global connected_BCI
 
         connected_BCI = False
-        # depicting_openbci = Process(target=eeg, args=(self.com_port, eeg_queue, connected_BCI))
-        # depicting_openbci.start()
+        depicting_openbci = Process(target=eeg, args=(self.com_port, eeg_queue, connected_BCI))
+        depicting_openbci.start()
 
         depicting_gazepoint = Process(target=collect_eye_biometrics, args=(eye_tracker_queue,))
         depicting_gazepoint.start()
@@ -248,11 +249,11 @@ class Ui_MainWindow(object):
         global begin_time
         begin_time = time.time()
 
-        # self.y_interst = [0] * 60
-        # self.y_valence = [0] * 60
-        # self.y_concentration = [0] * 60
-        # self.y_cognitive = [0] * 60
-        # self.y_approach = [0] * 60
+        self.y_interst = [0] * 60
+        self.y_valence = [0] * 60
+        self.y_concentration = [0] * 60
+        self.y_cognitive = [0] * 60
+        self.y_approach = [0] * 60
 
         pen_approach = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(0, 255, 0))
         pen_valence = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(255, 0, 255))
@@ -270,7 +271,7 @@ class Ui_MainWindow(object):
         self.timer = QtCore.QTimer()
         self.timer.setInterval(1000)
 
-        # self.timer.timeout.connect(self.updater)
+        self.timer.timeout.connect(self.updater)
 
         self.timer.start() 
 
@@ -296,52 +297,42 @@ class Ui_MainWindow(object):
             self.x.append(self.x[-1] + 1)
 
             self.y_valence = self.y_valence[1:]
-            if float(temp_eeg.get('Valence')[0]) == 0:
-                pass
-            else:
-                self.y_valence.append(float(temp_eeg.get('Valence')[0]))
-                self.data_line_valence.setData(self.x, self.y_valence)
+
+            self.y_valence.append(float(temp_eeg.get('Valence')[0]))
+            self.data_line_valence.setData(self.x, self.y_valence)
 
         def update_plot_data_cognitive(self):
-            global temp_eeg
+            global temp_eeg, created_file
             self.x = self.x[1:]
             self.x.append(self.x[-1] + 1)
 
             self.y_cognitive = self.y_cognitive[1:]
-            if float(temp_eeg.get('Cognitive_Load')[0]) == 0:
-                pass
-            else:
-                self.y_cognitive.append(float(temp_eeg.get('Cognitive_Load')[0]))
-                self.data_line_cognitive.setData(self.x, self.y_cognitive)
+
+            self.y_cognitive.append(float(temp_eeg.get('Cognitive_Load')[0]))
+            self.data_line_cognitive.setData(self.x, self.y_cognitive)
     
         def update_plot_data_concentration(self):
             self.x = self.x[1:]
             self.x.append(self.x[-1] + 1)
 
             self.y_concentration = self.y_concentration[1:]
-            if float(temp_eeg.get('Concentration')[0]) == 0:
-                pass
-            else:
-                self.y_concentration.append(float(temp_eeg.get('Concentration')[0]))
-                self.data_line_concentration.setData(self.x, self.y_concentration)
+
+            self.y_concentration.append(float(temp_eeg.get('Concentration')[0]))
+            self.data_line_concentration.setData(self.x, self.y_concentration)
 
         def update_plot_data_approach(self):
             self.x = self.x[1:]
             self.x.append(self.x[-1] + 1)
 
             self.y_approach = self.y_approach[1:]
-            if float(temp_eeg.get('Approach_Withdrawal')[0]) == 0:
-                pass
-            else:
-                self.y_approach.append(float(temp_eeg.get('Approach_Withdrawal')[0]))
-                self.data_line_approach.setData(self.x, self.y_approach)
 
+            self.y_approach.append(float(temp_eeg.get('Approach_Withdrawal')[0]))
+            self.data_line_approach.setData(self.x, self.y_approach)
         
         update_plot_data_valence(self)
         update_plot_data_cognitive(self)
         update_plot_data_concentration(self)
         update_plot_data_approach(self)
-
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -401,16 +392,16 @@ class ScreenRecorder(QThread):
                             raise TypeError
                         else:
                             list_st.append([temp_x * 1920, temp_y * 1080])
-                            # with open(created_file[0] + "_tracker_data.csv", 'a', newline="") as file:
-                            #     writer = csv.writer(file)
-                            #     if os.stat(created_file[0] + "_tracker_data.csv").st_size == 0:
-                            #         writer.writerow(["time", "X", "y"])
-                            #     try:
-                            #         current_time_tracker = time.time() - begin_time
-                            #         writer.writerow([current_time_tracker, temp.get('eye_gaze_screen_fraction_x'), temp.get('eye_gaze_screen_fraction_y')])
-                            #     except KeyError:
-                            #         print("something wrong with writing eye_tracker")
-                            #     file.close()
+                            with open(created_file[0] + "_tracker_data.csv", 'a', newline="") as file:
+                                writer = csv.writer(file)
+                                if os.stat(created_file[0] + "_tracker_data.csv").st_size == 0:
+                                    writer.writerow(["time", "X", "y"])
+                                try:
+                                    current_time_tracker = time.time() - begin_time
+                                    writer.writerow([current_time_tracker, temp.get('eye_gaze_screen_fraction_x'), temp.get('eye_gaze_screen_fraction_y')])
+                                except KeyError:
+                                    print("something wrong with writing eye_tracker")
+                                file.close()
                     except TypeError:
                         pass
 
