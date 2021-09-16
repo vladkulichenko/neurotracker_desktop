@@ -120,51 +120,57 @@ class Ui_MainWindow(object):
         self.actionOpen_Project.setObjectName("actionOpen_Project")
         self.actionCalibrate_Eye_Traker = QtWidgets.QAction(MainWindow)
         self.actionCalibrate_Eye_Traker.setObjectName("actionCalibrate_Eye_Traker")
-        self.hb_label = QtWidgets.QLabel(MainWindow)
-        self.hb_label.setGeometry(QtCore.QRect(10, 640, 200, 50))
-        self.hb_label.setText('Heart beat')
-        font = QtGui.QFont()
-        font.setPointSize(25)
-        font.setBold(True)
-        font.setWeight(75)
-        font.setStyleStrategy(QtGui.QFont.NoAntialias)
-        self.hb_label.setFont(font)
-        self.hb_label.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.hb_label.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.hb_v_label = QtWidgets.QLabel(MainWindow)
-        self.hb_v_label.setGeometry(QtCore.QRect(220, 640, 200, 50))
-        self.hb_v_label.setText(f'{heart_beat}')
-        font = QtGui.QFont()
-        font.setPointSize(25)
-        font.setBold(True)
-        font.setWeight(75)
-        font.setStyleStrategy(QtGui.QFont.NoAntialias)
-        self.hb_v_label.setFont(font)
-        self.hb_v_label.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.hb_v_label.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.gsr_label = QtWidgets.QLabel(MainWindow)
-        self.gsr_label.setGeometry(QtCore.QRect(430, 640, 200, 50))
-        self.gsr_label.setText('GSR')
-        font = QtGui.QFont()
-        font.setPointSize(25)
-        font.setBold(True)
-        font.setWeight(75)
-        font.setStyleStrategy(QtGui.QFont.NoAntialias)
-        self.gsr_label.setFont(font)
-        self.gsr_label.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.gsr_label.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.gsr_v_label = QtWidgets.QLabel(MainWindow)
-        self.gsr_v_label.setGeometry(QtCore.QRect(640, 640, 200, 50))
-        self.gsr_v_label.setText(f'{str(gsr)}')
-        font = QtGui.QFont()
-        font.setPointSize(25)
-        font.setBold(True)
-        font.setWeight(75)
-        font.setStyleStrategy(QtGui.QFont.NoAntialias)
-        self.gsr_v_label.setFont(font)
-        self.gsr_v_label.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.gsr_v_label.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.graph_GSR_HB = pg.PlotWidget(self.centralwidget)
+        self.graph_GSR_HB.setGeometry(QtCore.QRect(10, 500, 200, 150))
+        self.graph_GSR_HB.showGrid(x=True, y=True)
+        styles = {"color": "#f00", "font-size": "20px"}
+        self.graph_GSR_HB.setLabel("bottom", "GSR and Heart Beat", **styles)
+        # self.hb_label = QtWidgets.QLabel(MainWindow)
+        # self.hb_label.setGeometry(QtCore.QRect(10, 640, 200, 50))
+        # self.hb_label.setText('Heart beat')
+        # font = QtGui.QFont()
+        # font.setPointSize(25)
+        # font.setBold(True)
+        # font.setWeight(75)
+        # font.setStyleStrategy(QtGui.QFont.NoAntialias)
+        # self.hb_label.setFont(font)
+        # self.hb_label.setLayoutDirection(QtCore.Qt.LeftToRight)
+        # self.hb_label.setFrameShape(QtWidgets.QFrame.NoFrame)
+        # self.hb_v_label = QtWidgets.QLabel(MainWindow)
+        # self.hb_v_label.setGeometry(QtCore.QRect(220, 640, 200, 50))
+        # self.hb_v_label.setText(f'{heart_beat}')
+        # font = QtGui.QFont()
+        # font.setPointSize(25)
+        # font.setBold(True)
+        # font.setWeight(75)
+        # font.setStyleStrategy(QtGui.QFont.NoAntialias)
+        # self.hb_v_label.setFont(font)
+        # self.hb_v_label.setLayoutDirection(QtCore.Qt.LeftToRight)
+        # self.hb_v_label.setFrameShape(QtWidgets.QFrame.NoFrame)
+        # self.gsr_label = QtWidgets.QLabel(MainWindow)
+        # self.gsr_label.setGeometry(QtCore.QRect(430, 640, 200, 50))
+        # self.gsr_label.setText('GSR')
+        # font = QtGui.QFont()
+        # font.setPointSize(25)
+        # font.setBold(True)
+        # font.setWeight(75)
+        # font.setStyleStrategy(QtGui.QFont.NoAntialias)
+        # self.gsr_label.setFont(font)
+        # self.gsr_label.setLayoutDirection(QtCore.Qt.LeftToRight)
+        # self.gsr_label.setFrameShape(QtWidgets.QFrame.NoFrame)
+        # self.gsr_v_label = QtWidgets.QLabel(MainWindow)
+        # self.gsr_v_label.setGeometry(QtCore.QRect(640, 640, 200, 50))
+        # self.gsr_v_label.setText(f'{str(gsr)}')
+        # font = QtGui.QFont()
+        # font.setPointSize(25)
+        # font.setBold(True)
+        # font.setWeight(75)
+        # font.setStyleStrategy(QtGui.QFont.NoAntialias)
+        # self.gsr_v_label.setFont(font)
+        # self.gsr_v_label.setLayoutDirection(QtCore.Qt.LeftToRight)
+        # self.gsr_v_label.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.actionRun = QtWidgets.QAction(MainWindow)
+        self.actionRun.setShortcut('Ctrl+R')
         self.actionRun.setObjectName("Run")
         self.actionSettings = QtWidgets.QAction(MainWindow)
         self.actionSettings.setObjectName("Settings")
@@ -232,6 +238,8 @@ class Ui_MainWindow(object):
         self.label1.setText('Type of connection')
         self.drop_down_ports.addItem('COM2')
         self.drop_down_ports.addItem('COM3')
+        # self.com_port = 'COM3'
+        # self.com_port = self.drop_down_ports.currentText()
         self.drop_down_conn = QComboBox(self.settings_w)
         self.drop_down_conn.addItem('Type_of_connection')
         self.drop_down_conn.addItem('WiFi')
@@ -301,12 +309,16 @@ class Ui_MainWindow(object):
         self.y_concentration = [0] * 60
         self.y_cognitive = [0] * 60
         self.y_approach = [0] * 60
+        self.GSR = [0] * 60
+        self.HB = [0] * 60
 
         pen_approach = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(0, 255, 0))
         pen_valence = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(255, 0, 255))
         pen_cognitive = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(0, 0, 255))
         pen_concentration = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(255, 0, 0))
-        
+        pen_GSR = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(125, 0, 0))
+        pen_HB = pg.mkPen(style=QtCore.Qt.SolidLine, cosmetic=True, width=2.5, color=(255, 0, 0))
+
         self.data_line_valence = self.graph_approach.plot(self.x, self.y_valence, antialias=True, pen=pen_valence,
                                                           name="Valence")
         self.data_line_cognitive = self.graph_cognitive.plot(self.x, self.y_cognitive, pen=pen_cognitive,
@@ -315,83 +327,21 @@ class Ui_MainWindow(object):
                                                                  name="Concentration", antialias=True)
         self.data_line_approach = self.graph_approach.plot(self.x, self.y_approach, antialias=True, pen=pen_approach,
                                                            name="Approach")
+        self.data_line_HB = self.graph_GSR_HB.plot(self.x, self.HB, antialias=True, pen=pen_HB,
+                                                           name="Approach")
+        self.data_line_GSR = self.graph_GSR_HB.plot(self.x, self.GSR, antialias=True, pen=pen_GSR,
+                                                           name="Approach")
         self.timer = QtCore.QTimer()
         self.timer.setInterval(1000)
 
-        if eeg_queue.qsize() == 0:
-            self.timer.timeout.connect(self.offline_updater)
-        else:
-            self.timer.timeout.connect(self.updater)
+        self.timer.timeout.connect(self.updater)
 
         self.timer.start() 
-
-    def offline_updater(self):
-
-        global temp_eeg, created_file
-        temp_eeg = eeg_queue.get()
-
-        # with open(f'{created_file[0]}_eeg_data.csv', 'r') as csvfile:
-        #     plots = csv.reader(csvfile, delimiter=',')
-        #
-        # print(plots[0])
-
-        def update_plot_data_valence(self):
-            global temp_eeg
-            self.x = self.x[1:]
-            self.x.append(self.x[-1] + 1)
-
-            self.y_valence = self.y_valence[1:]
-
-            self.y_valence.append(float(temp_eeg.get('Valence')[0]))
-            self.data_line_valence.setData(self.x, self.y_valence)
-
-        def update_plot_data_cognitive(self):
-            global temp_eeg, created_file
-            self.x = self.x[1:]
-            self.x.append(self.x[-1] + 1)
-
-            self.y_cognitive = self.y_cognitive[1:]
-
-            self.y_cognitive.append(float(temp_eeg.get('Cognitive_Load')[0]))
-            self.data_line_cognitive.setData(self.x, self.y_cognitive)
-
-        def update_plot_data_concentration(self):
-            self.x = self.x[1:]
-            self.x.append(self.x[-1] + 1)
-
-            self.y_concentration = self.y_concentration[1:]
-
-            self.y_concentration.append(float(temp_eeg.get('Concentration')[0]))
-            self.data_line_concentration.setData(self.x, self.y_concentration)
-
-        def update_plot_data_approach(self):
-            self.x = self.x[1:]
-            self.x.append(self.x[-1] + 1)
-
-            self.y_approach = self.y_approach[1:]
-
-            self.y_approach.append(float(temp_eeg.get('Approach_Withdrawal')[0]))
-            self.data_line_approach.setData(self.x, self.y_approach)
-
-        update_plot_data_valence(self)
-        update_plot_data_cognitive(self)
-        update_plot_data_concentration(self)
-        update_plot_data_approach(self)
 
     def updater(self):
 
         global temp_eeg, created_file
         temp_eeg = eeg_queue.get()
-        with open(created_file[0] + "_eeg_data.csv", 'a', newline="") as file:
-            writer = csv.writer(file)
-            if os.stat(created_file[0] + "_eeg_data.csv").st_size == 0:
-                writer.writerow(["time", "Approach_Withdrawal", "Interest", "Cognitive_Load", "Valence", "Concentration"])
-            try:
-                current_time_eeg = time.time() - begin_time
-                writer.writerow([current_time_eeg, temp_eeg["Approach_Withdrawal"][0], temp_eeg["Interest"][0], temp_eeg["Cognitive_Load"][0], temp_eeg["Valence"][0], temp_eeg["Concentration"][0]])
-            except KeyError:
-                print("something wrong with writing openbci")
-            file.close()
 
         def update_plot_data_valence(self):
             global temp_eeg
@@ -402,6 +352,26 @@ class Ui_MainWindow(object):
 
             self.y_valence.append(float(temp_eeg.get('Valence')[0]))
             self.data_line_valence.setData(self.x, self.y_valence)
+
+        def update_plot_data_HB(self):
+            global temp_eeg, heart_beat
+            self.x = self.x[1:]
+            self.x.append(self.x[-1] + 1)
+
+            self.HB = self.HB[1:]
+
+            self.HB.append(int(heart_beat))
+            self.data_line_HB.setData(self.x, self.HB)
+
+        def update_plot_data_GSR(self):
+            global temp_eeg, gsr
+            self.x = self.x[1:]
+            self.x.append(self.x[-1] + 1)
+
+            self.GSR = self.GSR[1:]
+
+            self.GSR.append(float((int(gsr)/1000)))
+            self.data_line_GSR.setData(self.x, self.GSR)
 
         def update_plot_data_cognitive(self):
             global temp_eeg, created_file
@@ -435,11 +405,13 @@ class Ui_MainWindow(object):
         update_plot_data_cognitive(self)
         update_plot_data_concentration(self)
         update_plot_data_approach(self)
+        update_plot_data_HB(self)
+        update_plot_data_GSR(self)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.menuStart.setTitle(_translate("MainWindow", "Calibration"))
+        # self.menuStart.setTitle(_translate("MainWindow", "Calibration"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
         self.menuRun.setTitle(_translate("MainWindow", "Run"))
@@ -455,9 +427,6 @@ class Ui_MainWindow(object):
 
     def ImageUpdateSlot(self, Image):
         self.Feed.setPixmap(QPixmap.fromImage(Image))
-
-    def CancelFeed(self):
-        self.ScreenRecorder.stop()
 
 
 class MyPopup(QWidget):
@@ -499,16 +468,16 @@ class ScreenRecorder(QThread):
                             raise TypeError
                         else:
                             list_st.append([temp_x * 1920, temp_y * 1080])
-                            # with open(created_file[0] + "_tracker_data.csv", 'a', newline="") as file:
-                            #     writer = csv.writer(file)
-                            #     if os.stat(created_file[0] + "_tracker_data.csv").st_size == 0:
-                            #         writer.writerow(["time", "X", "y"])
-                            #     try:
-                            #         current_time_tracker = time.time() - begin_time
-                            #         writer.writerow([current_time_tracker, temp.get('eye_gaze_screen_fraction_x'), temp.get('eye_gaze_screen_fraction_y')])
-                            #     except KeyError:
-                            #         print("something wrong with writing eye_tracker")
-                            #     file.close()
+                            with open(created_file[0] + "_tracker_data.csv", 'a', newline="") as file:
+                                writer = csv.writer(file)
+                                if os.stat(created_file[0] + "_tracker_data.csv").st_size == 0:
+                                    writer.writerow(["time", "X", "y"])
+                                try:
+                                    current_time_tracker = time.time() - begin_time
+                                    writer.writerow([current_time_tracker, temp.get('eye_gaze_screen_fraction_x'), temp.get('eye_gaze_screen_fraction_y')])
+                                except KeyError:
+                                    print("something wrong with writing eye_tracker")
+                                file.close()
                     except TypeError:
                         pass
 
